@@ -7,8 +7,8 @@
 ## Boundaries
 
 - Current source in this checkout lives in `src/runway/index.ts`
-- Generated docs live in `docs/agent/`
-- Generated graph output lives in `graphify-out/` once harness generation exists
+- Current manual onboarding docs live in `docs/agent/`
+- Generated docs will appear later in `graphify-out/` once harness generation exists
 
 ## Planned Later
 

@@ -1,15 +1,29 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 describe("agent docs", () => {
   it("provides the root and local onboarding docs", () => {
-    const readme = readFileSync(resolve(process.cwd(), "README.md"), "utf8");
-    const agents = readFileSync(resolve(process.cwd(), "AGENTS.md"), "utf8");
-    const index = readFileSync(resolve(process.cwd(), "docs/agent/index.md"), "utf8");
-    const architecture = readFileSync(resolve(process.cwd(), "docs/agent/architecture.md"), "utf8");
-    const testing = readFileSync(resolve(process.cwd(), "docs/agent/testing.md"), "utf8");
-    const codeMap = readFileSync(resolve(process.cwd(), "docs/agent/code-map.md"), "utf8");
+    const root = process.cwd();
+    const readme = readFileSync(resolve(root, "README.md"), "utf8");
+    const agents = readFileSync(resolve(root, "AGENTS.md"), "utf8");
+    const index = readFileSync(resolve(root, "docs/agent/index.md"), "utf8");
+    const architecture = readFileSync(resolve(root, "docs/agent/architecture.md"), "utf8");
+    const testing = readFileSync(resolve(root, "docs/agent/testing.md"), "utf8");
+    const codeMap = readFileSync(resolve(root, "docs/agent/code-map.md"), "utf8");
+    const packageJson = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8")) as {
+      scripts?: Record<string, string>;
+    };
+    const cliExists = existsSync(resolve(root, "src/runway/cli.ts"));
+    const scripts = packageJson.scripts ?? {};
+
+    expect(cliExists).toBe(false);
+    expect(scripts["harness:generate"]).toBe("tsx src/runway/cli.ts generate");
+    expect(scripts["harness:check"]).toBe("tsx src/runway/cli.ts check");
+    expect(scripts["harness:audit"]).toBe("tsx src/runway/cli.ts audit");
+    expect(scripts["validate:pr"]).toBe(
+      "npm run typecheck && npm run test && npm run harness:check && npm run harness:audit && npm run harness:inferential-review && npm run harness:scorecard",
+    );
 
     expect(readme).toContain("Harness Commands");
     expect(readme).toContain("planned for the next bootstrap tasks");
@@ -38,6 +52,8 @@ describe("agent docs", () => {
     const agentsAvailabilityLine = "These validation commands are planned for the next bootstrap tasks and are not available yet in this checkout because `src/runway/cli.ts` does not exist.";
 
     expect(index).toContain("Scope");
+    expect(index).toContain("Current manual onboarding docs");
+    expect(index).toContain("Generated docs will appear later in `graphify-out/`");
     expect(index).toContain("Planned Later");
     expect(index).toContain("src/runway/index.ts");
     expect(index).toContain("graphify-out/");
@@ -93,5 +109,15 @@ describe("agent docs", () => {
     expect(readme).not.toContain("Harness Commands\n\n- `npm run harness:generate`");
     expect(agents).toContain(agentsAvailabilityLine);
     expect(agents).not.toContain("Validation\n\n- `npm run harness:check`");
+    expect(readme).toContain(
+      cliExists
+        ? "are usable now"
+        : "are planned for the next bootstrap tasks and are not usable yet in this checkout because `src/runway/cli.ts` does not exist.",
+    );
+    expect(agents).toContain(
+      cliExists
+        ? "available now"
+        : "are planned for the next bootstrap tasks and are not available yet in this checkout because `src/runway/cli.ts` does not exist.",
+    );
   });
 });
