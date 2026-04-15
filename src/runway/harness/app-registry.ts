@@ -22,13 +22,71 @@ export const harnessTargets = [
     ],
     validationSurfaces: [
       {
-        name: "cli and harness logic",
-        pathPrefixes: ["src/runway/cli.ts", "src/runway/harness"],
+        name: "package entrypoints",
+        pathPrefixes: ["src/runway/index.ts", "src/runway/cli.ts"],
         commands: [
           { kind: "npm", script: "typecheck" },
           { kind: "npm", script: "test" },
         ],
         behaviorScenarios: ["cli-runway-smoke"],
+      },
+      {
+        name: "cli and harness logic",
+        pathPrefixes: ["src/runway/harness"],
+        commands: [
+          { kind: "npm", script: "typecheck" },
+          { kind: "npm", script: "test" },
+        ],
+        behaviorScenarios: [],
+      },
+      {
+        name: "scenario inventory",
+        pathPrefixes: ["src/runway/scenarios"],
+        commands: [
+          { kind: "npm", script: "typecheck" },
+          { kind: "npm", script: "test" },
+        ],
+        behaviorScenarios: ["cli-runway-smoke"],
+      },
+      {
+        name: "manual docs",
+        pathPrefixes: [
+          "README.md",
+          "AGENTS.md",
+          "docs/agent/index.md",
+          "docs/agent/architecture.md",
+          "docs/agent/testing.md",
+          "docs/agent/code-map.md",
+        ],
+        commands: [
+          { kind: "npm", script: "test" },
+          { kind: "npm", script: "harness:generate" },
+          { kind: "npm", script: "harness:check" },
+        ],
+        behaviorScenarios: [],
+      },
+      {
+        name: "generated docs",
+        pathPrefixes: [
+          "graphify-out/index.md",
+          "docs/agent/entry-index.md",
+          "docs/agent/test-index.md",
+          "docs/agent/key-folder-index.md",
+          "docs/agent/validation-guide.md",
+          "docs/agent/validation-map.json",
+        ],
+        commands: [
+          { kind: "npm", script: "test" },
+          { kind: "npm", script: "harness:generate" },
+          { kind: "npm", script: "harness:check" },
+        ],
+        behaviorScenarios: [],
+      },
+      {
+        name: "tests",
+        pathPrefixes: ["tests"],
+        commands: [{ kind: "npm", script: "test" }],
+        behaviorScenarios: [],
       },
     ],
   },

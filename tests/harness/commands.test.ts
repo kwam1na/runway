@@ -1,0 +1,116 @@
+import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, relative, resolve } from "node:path";
+import { afterEach, describe, expect, it } from "vitest";
+import { runCli } from "../../src/runway/cli.js";
+
+const originalCwd = process.cwd();
+const tempDirs: string[] = [];
+
+afterEach(() => {
+  process.chdir(originalCwd);
+  for (const dir of tempDirs.splice(0)) {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+async function inWorkspace(assertions: (workspace: string) => Promise<void>): Promise<void> {
+  const tempRoot = mkdtempSync(join(tmpdir(), "runway-harness-"));
+  const workspace = join(tempRoot, "workspace");
+  tempDirs.push(tempRoot);
+  cpSync(originalCwd, workspace, {
+    recursive: true,
+    filter(source) {
+      const rel = relative(originalCwd, source);
+      if (rel === "") return true;
+
+      return rel !== ".git" && !rel.startsWith(`.git/`) && rel !== "node_modules" && !rel.startsWith(`node_modules/`);
+    },
+  });
+  process.chdir(workspace);
+  await assertions(workspace);
+}
+
+describe("harness command behavior", () => {
+  it("generates registry-backed artifacts instead of placeholder headers", async () => {
+    await inWorkspace(async (workspace) => {
+      const result = await runCli(["generate"]);
+      expect(result.exitCode).toBe(0);
+
+      const payload = JSON.parse(result.stdout) as {
+        command: string;
+        outputs: string[];
+      };
+
+      expect(payload.command).toBe("generate");
+      expect(payload.outputs).toContain("graphify-out/index.md");
+      expect(payload.outputs).toContain("docs/agent/validation-map.json");
+
+      expect(readFileSync(resolve(workspace, "graphify-out/index.md"), "utf8")).toContain("runway");
+      expect(readFileSync(resolve(workspace, "docs/agent/entry-index.md"), "utf8")).toContain("src/runway");
+      expect(readFileSync(resolve(workspace, "docs/agent/key-folder-index.md"), "utf8")).toContain(
+        "CLI entrypoints",
+      );
+      expect(readFileSync(resolve(workspace, "docs/agent/validation-guide.md"), "utf8")).toContain(
+        "cli and harness logic",
+      );
+
+      const validationMap = JSON.parse(
+        readFileSync(resolve(workspace, "docs/agent/validation-map.json"), "utf8"),
+      ) as {
+        surfaces: Array<{
+          name: string;
+          pathPrefixes: string[];
+        }>;
+      };
+
+      expect(validationMap.surfaces).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ name: "cli and harness logic" }),
+          expect.objectContaining({ name: "generated docs" }),
+          expect.objectContaining({ name: "tests" }),
+        ]),
+      );
+    });
+  });
+
+  it("selects the smallest deterministic validation set for touched files", async () => {
+    await inWorkspace(async () => {
+      const result = await runCli(["review", "src/runway/cli.ts"]);
+      expect(result.exitCode).toBe(0);
+
+      const payload = JSON.parse(result.stdout) as {
+        scripts: string[];
+        touchedFiles: string[];
+      };
+
+      expect(payload.touchedFiles).toEqual(["src/runway/cli.ts"]);
+      expect(payload.scripts).toEqual(["typecheck", "test"]);
+    });
+  });
+
+  it("fails check when a required generated artifact is missing", async () => {
+    await inWorkspace(async (workspace) => {
+      const generateResult = await runCli(["generate"]);
+      expect(generateResult.exitCode).toBe(0);
+
+      rmSync(resolve(workspace, "docs/agent/entry-index.md"));
+
+      const result = await runCli(["check"]);
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain("docs/agent/entry-index.md");
+      expect(result.stderr).toContain("missing");
+    });
+  });
+
+  it("fails audit when an audited file has no validation coverage", async () => {
+    await inWorkspace(async (workspace) => {
+      writeFileSync(resolve(workspace, "src/runway/uncovered.ts"), "export const uncovered = true;\n", "utf8");
+
+      const result = await runCli(["audit"]);
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain("Uncovered files");
+      expect(result.stderr).toContain("src/runway/uncovered.ts");
+    });
+  });
+});
