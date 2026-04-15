@@ -4,7 +4,7 @@ CLI-first TypeScript repository for an agentic personal-finance system.
 
 ## Harness Commands
 
-These are planned for the next bootstrap tasks and are not usable yet in this checkout because `src/runway/cli.ts` does not exist.
+The CLI command surface now exists, and these commands are scaffolded/stubbed while deeper harness work lands.
 
 - `npm run harness:generate`
 - `npm run harness:check`

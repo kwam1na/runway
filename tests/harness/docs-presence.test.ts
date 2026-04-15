@@ -22,7 +22,7 @@ describe("agent docs", () => {
     const generatedGraphExists = existsSync(resolve(root, "graphify-out"));
     const scripts = packageJson.scripts ?? {};
 
-    expect(cliExists).toBe(false);
+    expect(cliExists).toBe(true);
     expect(currentSourceExists).toBe(true);
     expect(currentDocsDirExists).toBe(true);
     expect(plannedRegistryExists).toBe(false);
@@ -36,8 +36,8 @@ describe("agent docs", () => {
     );
 
     expect(readme).toContain("Harness Commands");
-    expect(readme).toContain("planned for the next bootstrap tasks");
-    expect(readme).toContain("not usable yet");
+    expect(readme).toContain("The CLI command surface now exists");
+    expect(readme).toContain("scaffolded/stubbed");
     expect(readme).toContain("npm run harness:generate");
     expect(readme).toContain("npm run harness:check");
     expect(readme).toContain("npm run harness:audit");
@@ -45,10 +45,10 @@ describe("agent docs", () => {
 
     expect(agents).toContain("Start here");
     expect(agents).toContain("docs/agent/index.md");
-    expect(agents).toContain("generated later");
-    expect(agents).toContain("planned for the next bootstrap tasks");
-    expect(agents).toContain("not available yet");
-    expect(agents).toContain("Regeneration with `npm run harness:generate` is planned for a later bootstrap task");
+    expect(agents).toContain("CLI command surface lives in `src/runway/cli.ts`");
+    expect(agents).toContain("graphify-out/` is generated later");
+    expect(agents).toContain("scaffolded through the CLI surface");
+    expect(agents).toContain("available through the scaffolded CLI surface");
     expect(agents).toContain("npm run harness:check");
     expect(agents).toContain("npm run harness:audit");
     expect(agents).toContain("npm run harness:behavior");
@@ -58,9 +58,6 @@ describe("agent docs", () => {
     const architectureSections = architecture.split("\n## Planned Later\n");
     const codeMapSections = codeMap.split("\n## Planned Later\n");
     const testingSections = testing.split("\n## Manual Extras\n");
-
-    const readmeAvailabilityLine = "These are planned for the next bootstrap tasks and are not usable yet in this checkout because `src/runway/cli.ts` does not exist.";
-    const agentsAvailabilityLine = "These validation commands are planned for the next bootstrap tasks and are not available yet in this checkout because `src/runway/cli.ts` does not exist.";
 
     expect(index).toContain("Scope");
     expect(index).toContain("[Scope](#scope)");
@@ -72,28 +69,26 @@ describe("agent docs", () => {
     expect(index).toContain("## Planned Later");
     expect(index).toContain("## Common Validations");
     expect(index).toContain("Current manual onboarding docs");
+    expect(index).toContain("Current CLI surface lives in `src/runway/cli.ts`");
     expect(index).toContain("Generated docs will appear later in `graphify-out/`");
     expect(index).toContain("Planned Later");
     expect(index).toContain("docs/agent/");
     expect(index).toContain("graphify-out/");
     expect(index).toContain("src/runway/index.ts");
-    expect(index).toContain("npm run harness:check");
-    expect(index).toContain("planned and not runnable yet");
     expect(index).toContain("src/runway/cli.ts");
+    expect(index).toContain("npm run harness:check");
+    expect(index).toContain("scaffolded through `src/runway/cli.ts`");
     expect(index).toContain("src/runway/harness/app-registry.ts");
     expect(index).toContain("src/runway/scenarios/inventory.ts");
-    expect(indexSections[1]).toContain("src/runway/cli.ts");
     expect(indexSections[1]).toContain("src/runway/harness/app-registry.ts");
     expect(indexSections[1]).toContain("src/runway/scenarios/inventory.ts");
     expect(indexSections[0]).toContain("Current manual onboarding docs");
     expect(indexSections[0]).toContain("docs/agent/");
     expect(indexSections[0]).toContain("graphify-out/");
-    expect(indexSections[0]).not.toContain("src/runway/cli.ts");
+    expect(indexSections[0]).toContain("Current CLI surface lives in `src/runway/cli.ts`");
     expect(indexSections[0]).not.toContain("src/runway/harness/app-registry.ts");
     expect(indexSections[0]).not.toContain("src/runway/scenarios/inventory.ts");
     expect(indexSections[1]).toContain("npm run harness:check");
-    expect(indexSections[1]).toContain("planned and not runnable yet");
-    expect(indexSections[1]).toContain("src/runway/cli.ts");
     expect(indexSections[1]).toContain("src/runway/harness/app-registry.ts");
     expect(indexSections[1]).toContain("src/runway/scenarios/inventory.ts");
 
@@ -103,6 +98,7 @@ describe("agent docs", () => {
     expect(architecture).toContain("## Entrypoints");
     expect(architecture).toContain("## Edit Here, Not There");
     expect(architecture).toContain("Current bootstrap entrypoint: `src/runway/index.ts`");
+    expect(architecture).toContain("Current CLI surface: `src/runway/cli.ts`");
     expect(architecture).toContain("Planned Later");
     expect(architecture).toContain("src/runway/index.ts");
     expect(architecture).toContain("src/runway/cli.ts");
@@ -110,10 +106,10 @@ describe("agent docs", () => {
     expect(architecture).toContain("src/runway/scenarios/inventory.ts");
     expect(architectureSections[0]).toContain("Entrypoints");
     expect(architectureSections[0]).toContain("Current bootstrap entrypoint");
-    expect(architectureSections[0]).not.toContain("src/runway/cli.ts");
+    expect(architectureSections[0]).toContain("Current CLI surface: `src/runway/cli.ts`");
     expect(architectureSections[0]).not.toContain("src/runway/harness/app-registry.ts");
     expect(architectureSections[0]).not.toContain("src/runway/scenarios/inventory.ts");
-    expect(architectureSections[1]).toContain("src/runway/cli.ts");
+    expect(architectureSections[1]).not.toContain("src/runway/cli.ts");
     expect(architectureSections[1]).toContain("src/runway/harness/app-registry.ts");
     expect(architectureSections[1]).toContain("src/runway/scenarios/inventory.ts");
 
@@ -125,7 +121,7 @@ describe("agent docs", () => {
     expect(testing).toContain("## Harness Repair");
     expect(testing).toContain("## Manual Extras");
     expect(testing).toContain("npm run validate:pr");
-    expect(testing).toContain("planned and not runnable yet until `src/runway/cli.ts` exists");
+    expect(testing).toContain("present now as part of the scaffolded CLI surface");
     expect(testing).toContain("npm run harness:inferential-review");
     expect(testing).toContain("npm run harness:scorecard");
     expect(testing).toContain("Manual Extras");
@@ -133,7 +129,7 @@ describe("agent docs", () => {
     expect(testing).toContain("extra manual check");
     expect(testingSections[0]).toContain("Validation Ladder");
     expect(testingSections[0]).toContain("npm run validate:pr");
-    expect(testingSections[0]).toContain("planned and not runnable yet until `src/runway/cli.ts` exists");
+    expect(testingSections[0]).toContain("present now as part of the scaffolded CLI surface");
     expect(testingSections[0]).not.toContain("npm run harness:behavior");
     expect(testingSections[1]).toContain("npm run harness:behavior");
 
@@ -143,6 +139,7 @@ describe("agent docs", () => {
     expect(codeMap).toContain("## Key Folders");
     expect(codeMap).toContain("## Planned Later");
     expect(codeMap).toContain("Current source lives in `src/runway/index.ts`");
+    expect(codeMap).toContain("Current CLI surface lives in `src/runway/cli.ts`");
     expect(codeMap).toContain("Planned Later");
     expect(codeMap).toContain("src/runway/index.ts");
     expect(codeMap).toContain("src/runway/cli.ts");
@@ -150,30 +147,19 @@ describe("agent docs", () => {
     expect(codeMap).toContain("src/runway/scenarios/");
     expect(codeMap).toContain("src/runway/agents/");
     expect(codeMap).toContain("src/runway/finance/");
+    expect(codeMap).toContain("graphify-out/");
     expect(codeMapSections[0]).toContain("Key Folders");
     expect(codeMapSections[0]).toContain("Current source lives in `src/runway/index.ts`");
-    expect(codeMapSections[0]).not.toContain("src/runway/cli.ts");
+    expect(codeMapSections[0]).toContain("Current CLI surface lives in `src/runway/cli.ts`");
     expect(codeMapSections[0]).not.toContain("src/runway/agents/");
     expect(codeMapSections[0]).not.toContain("src/runway/finance/");
-    expect(codeMapSections[1]).toContain("src/runway/cli.ts");
+    expect(codeMapSections[1]).not.toContain("src/runway/cli.ts");
     expect(codeMapSections[1]).toContain("src/runway/agents/");
     expect(codeMapSections[1]).toContain("src/runway/finance/");
+    expect(codeMapSections[1]).toContain("graphify-out/");
 
-    expect(readme).toContain(readmeAvailabilityLine);
-    expect(readme).not.toContain("Harness Commands\n\n- `npm run harness:generate`");
-    expect(agents).toContain(agentsAvailabilityLine);
-    expect(agents).not.toContain("Validation\n\n- `npm run harness:check`");
-    expect(agents).toContain("planned for a later bootstrap task");
-    expect(readme).toContain(
-      cliExists
-        ? "are usable now"
-        : "are planned for the next bootstrap tasks and are not usable yet in this checkout because `src/runway/cli.ts` does not exist.",
-    );
-    expect(agents).toContain(
-      cliExists
-        ? "available now"
-        : "are planned for the next bootstrap tasks and are not available yet in this checkout because `src/runway/cli.ts` does not exist.",
-    );
+    expect(readme).not.toContain("planned for the next bootstrap tasks");
+    expect(agents).not.toContain("planned for the next bootstrap tasks");
     expect(agents).toContain("graphify-out/");
     expect(agents).toContain("Current onboarding docs live in `docs/agent/`");
   });

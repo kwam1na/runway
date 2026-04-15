@@ -8,10 +8,10 @@
 ## Entrypoints
 
 - Current bootstrap entrypoint: `src/runway/index.ts`
+- Current CLI surface: `src/runway/cli.ts`
 
 ## Planned Later
 
-- `src/runway/cli.ts`
 - `src/runway/harness/app-registry.ts`
 - `src/runway/scenarios/inventory.ts`
 

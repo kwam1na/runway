@@ -8,7 +8,7 @@
 
 ## Validation Ladder
 
-This mirrors `npm run validate:pr`, which is planned and not runnable yet until `src/runway/cli.ts` exists.
+This mirrors `npm run validate:pr`, which is present now as part of the scaffolded CLI surface.
 
 1. `npm run typecheck`
 2. `npm run test`
@@ -21,6 +21,7 @@ This mirrors `npm run validate:pr`, which is planned and not runnable yet until 
 
 - If a changed file has no coverage, update the registry and regenerate docs.
 - If a live file under an audited root has no coverage, fix the validation map generator input and rerun audit.
+- If a deeper harness path is still missing, keep it in the planned-later sections until the source lands.
 
 ## Manual Extras
 

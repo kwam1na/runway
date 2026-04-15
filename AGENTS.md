@@ -7,12 +7,13 @@ Read `docs/agent/index.md` before scanning source files.
 ## Navigation
 
 - Current onboarding docs live in `docs/agent/`
+- CLI command surface lives in `src/runway/cli.ts`
 - `graphify-out/` is generated later by `npm run harness:generate`
-- Regeneration with `npm run harness:generate` is planned for a later bootstrap task and is not available yet until `src/runway/cli.ts` exists
+- Regeneration with `npm run harness:generate` is scaffolded through the CLI surface and will fill `graphify-out/` once generation lands
 
 ## Validation
 
-These validation commands are planned for the next bootstrap tasks and are not available yet in this checkout because `src/runway/cli.ts` does not exist.
+These validation commands are available through the scaffolded CLI surface while deeper harness work lands.
 
 - `npm run harness:check`
 - `npm run harness:audit`
