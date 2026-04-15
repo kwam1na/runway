@@ -3,3 +3,4 @@ dist
 artifacts/*.json
 artifacts/*.log
 .DS_Store
+.worktrees/
