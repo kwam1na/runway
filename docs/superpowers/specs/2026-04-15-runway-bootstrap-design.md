@@ -2,7 +2,7 @@
 
 ## Summary
 
-Bootstrap `/Users/kwamina/Desktop/agent` as a git-backed, CLI-first Python repository for `runway`, an agentic system to assist in personal finances. The initial repository must be usable as both:
+Bootstrap `/Users/kwamina/Desktop/agent` as a git-backed, CLI-first TypeScript repository for `runway`, an agentic system to assist in personal finances. The initial repository must be usable as both:
 
 - the implementation home for runway scripts, agent workflows, checks, generators, and scenario runners
 - the first harnessed target that future agents can navigate, validate, and repair while the product surface is still forming
@@ -11,10 +11,10 @@ The design optimizes for uncertain early product runtime needs. It does not forc
 
 ## Goals
 
-- Initialize the repository as a git-backed Python project for runway.
+- Initialize the repository as a git-backed TypeScript/Node project for runway.
 - Establish a repo-level and local navigation layer for future agents.
 - Make the first runway package itself the first documented and validated target.
-- Generate machine-readable validation coverage and discovery docs from Python source-of-truth data.
+- Generate machine-readable validation coverage and discovery docs from TypeScript source-of-truth data.
 - Provide repo-level harness commands for generation, checking, review, audit, behavior runs, scorecards, and repair.
 - Add CI and harness self-tests so the harness can detect its own drift.
 
@@ -26,18 +26,25 @@ The design optimizes for uncertain early product runtime needs. It does not forc
 
 ## Recommended Approach
 
-Adopt a CLI-first Python repository for runway with a built-in agent harness.
+Adopt a CLI-first TypeScript/Node repository for runway with a built-in agent harness.
 
 This keeps the first version small and flexible:
 
-- the repository exposes a Python CLI entrypoint for harness operations
+- the repository exposes a Node CLI entrypoint for harness operations
 - runtime behavior is modeled as structured CLI scenarios rather than a long-running server contract
 - future services, workers, or additional packages can be added as new harness registry entries without reshaping the base repo
 - the first implementation focus stays on agent-oriented workflows and repository health rather than prematurely locking runway into a delivery channel
 
+Recommended baseline tooling:
+
+- `npm` for package management and script orchestration
+- `typescript` plus `tsc` for typechecking and builds
+- `tsx` for local script and CLI execution during development
+- `vitest` for harness self-tests
+
 ## Repository Shape
 
-The repository should start with one main Python package and one local agent manual rooted at the repo level.
+The repository should start with one main TypeScript package and one local agent manual rooted at the repo level.
 
 ```text
 agent/
@@ -60,11 +67,12 @@ agent/
 │   └── superpowers/
 │       └── specs/
 ├── graphify-out/
-├── pyproject.toml
+├── package.json
 ├── scripts/
+├── tsconfig.json
 ├── src/
 │   └── runway/
-│       ├── cli.py
+│       ├── cli.ts
 │       ├── finance/
 │       ├── harness/
 │       ├── agents/
@@ -98,14 +106,14 @@ Generated navigation should be rebuilt, not hand-maintained.
 
 The harness should follow a single pattern:
 
-`source-of-truth Python data -> generated docs and artifacts -> verification commands`
+`source-of-truth TypeScript data -> generated docs and artifacts -> verification commands`
 
 Authoritative sources:
 
-- `src/runway/harness/app_registry.py`
+- `src/runway/harness/app-registry.ts`
   Declares harnessed targets, audited roots, expected docs, key folders, and validation surfaces.
-- `src/runway/scenarios/inventory.py`
-  Declares runtime or behavior scenarios in structured Python data.
+- `src/runway/scenarios/inventory.ts`
+  Declares runtime or behavior scenarios in structured TypeScript data.
 - Hand-maintained docs:
   - `AGENTS.md`
   - `docs/agent/index.md`
@@ -196,7 +204,7 @@ Expected responsibilities:
 
 Validation coverage should be generated from registry data, not hand-maintained in JSON only.
 
-`docs/agent/validation-map.json` should be emitted from Python definitions so that:
+`docs/agent/validation-map.json` should be emitted from TypeScript definitions so that:
 
 - the human-maintained docs and machine-readable coverage derive from the same inputs
 - review and audit logic can trust one source of truth
@@ -204,7 +212,7 @@ Validation coverage should be generated from registry data, not hand-maintained 
 
 Initial validation surfaces should include:
 
-- `src/runway/cli.py`
+- `src/runway/cli.ts`
 - `src/runway/finance/`
 - `src/runway/agents/`
 - `src/runway/harness/`
@@ -272,7 +280,7 @@ CI should run runway's harness as both a user-facing system and a self-policing 
 
 The bootstrap should include workflow wiring that:
 
-- installs Python dependencies
+- installs Node dependencies
 - runs harness self-tests
 - runs `harness check`
 - runs touched-file review against a base when available
@@ -296,11 +304,13 @@ Harness self-tests should verify at minimum:
 - scenario inventory stays documented in both code and local docs
 - CI wiring contains the required harness steps
 
+Validation commands should prefer Node-native invocations such as `npm run typecheck`, `npm run test`, and targeted harness commands exposed through `npm run` or the CLI.
+
 ## Delivery Sequence
 
 Bootstrap should proceed in this order:
 
-1. Initialize git and Python project metadata.
+1. Initialize git, `package.json`, and TypeScript project metadata.
 2. Create root navigation and local agent docs.
 3. Create the `src/runway` package skeleton and CLI entrypoint.
 4. Add the harness registry, generators, checks, review and audit logic, and behavior scenario inventory.
@@ -322,7 +332,7 @@ Mitigation:
 
 Mitigation:
 
-- generate validation coverage and discovery docs from Python source-of-truth data
+- generate validation coverage and discovery docs from TypeScript source-of-truth data
 - make audit fail on uncovered or stale surfaces
 
 ### Risk: Harness overhead outruns repo value
