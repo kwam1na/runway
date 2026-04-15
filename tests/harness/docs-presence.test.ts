@@ -56,6 +56,14 @@ describe("agent docs", () => {
     const agentsAvailabilityLine = "These validation commands are planned for the next bootstrap tasks and are not available yet in this checkout because `src/runway/cli.ts` does not exist.";
 
     expect(index).toContain("Scope");
+    expect(index).toContain("[Scope](#scope)");
+    expect(index).toContain("[Boundaries](#boundaries)");
+    expect(index).toContain("[Planned Later](#planned-later)");
+    expect(index).toContain("[Common Validations](#common-validations)");
+    expect(index).toContain("## Scope");
+    expect(index).toContain("## Boundaries");
+    expect(index).toContain("## Planned Later");
+    expect(index).toContain("## Common Validations");
     expect(index).toContain("Current manual onboarding docs");
     expect(index).toContain("Generated docs will appear later in `graphify-out/`");
     expect(index).toContain("Planned Later");
@@ -80,6 +88,10 @@ describe("agent docs", () => {
     expect(indexSections[1]).toContain("src/runway/scenarios/inventory.ts");
 
     expect(architecture).toContain("Entrypoints");
+    expect(architecture).toContain("[Entrypoints](#entrypoints)");
+    expect(architecture).toContain("[Edit Here, Not There](#edit-here-not-there)");
+    expect(architecture).toContain("## Entrypoints");
+    expect(architecture).toContain("## Edit Here, Not There");
     expect(architecture).toContain("Current bootstrap entrypoint: `src/runway/index.ts`");
     expect(architecture).toContain("Planned Later");
     expect(architecture).toContain("src/runway/index.ts");
@@ -96,6 +108,12 @@ describe("agent docs", () => {
     expect(architectureSections[1]).toContain("src/runway/scenarios/inventory.ts");
 
     expect(testing).toContain("Validation Ladder");
+    expect(testing).toContain("[Validation Ladder](#validation-ladder)");
+    expect(testing).toContain("[Harness Repair](#harness-repair)");
+    expect(testing).toContain("[Manual Extras](#manual-extras)");
+    expect(testing).toContain("## Validation Ladder");
+    expect(testing).toContain("## Harness Repair");
+    expect(testing).toContain("## Manual Extras");
     expect(testing).toContain("npm run validate:pr");
     expect(testing).toContain("planned and not runnable yet until `src/runway/cli.ts` exists");
     expect(testing).toContain("npm run harness:inferential-review");
@@ -110,6 +128,10 @@ describe("agent docs", () => {
     expect(testingSections[1]).toContain("npm run harness:behavior");
 
     expect(codeMap).toContain("Key Folders");
+    expect(codeMap).toContain("[Key Folders](#key-folders)");
+    expect(codeMap).toContain("[Planned Later](#planned-later)");
+    expect(codeMap).toContain("## Key Folders");
+    expect(codeMap).toContain("## Planned Later");
     expect(codeMap).toContain("Current source lives in `src/runway/index.ts`");
     expect(codeMap).toContain("Planned Later");
     expect(codeMap).toContain("src/runway/index.ts");

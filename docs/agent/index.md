@@ -1,5 +1,12 @@
 # Runway Agent Index
 
+## Jump Links
+
+- [Scope](#scope)
+- [Boundaries](#boundaries)
+- [Planned Later](#planned-later)
+- [Common Validations](#common-validations)
+
 ## Scope
 
 `runway` is currently in a bootstrap state: it ships as a CLI-first TypeScript package shell with built-in harness tooling planned around it.

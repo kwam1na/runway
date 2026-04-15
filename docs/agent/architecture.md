@@ -1,5 +1,10 @@
 # Runway Architecture
 
+## Jump Links
+
+- [Entrypoints](#entrypoints)
+- [Edit Here, Not There](#edit-here-not-there)
+
 ## Entrypoints
 
 - Current bootstrap entrypoint: `src/runway/index.ts`

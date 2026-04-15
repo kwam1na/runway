@@ -1,5 +1,11 @@
 # Runway Testing
 
+## Jump Links
+
+- [Validation Ladder](#validation-ladder)
+- [Harness Repair](#harness-repair)
+- [Manual Extras](#manual-extras)
+
 ## Validation Ladder
 
 This mirrors `npm run validate:pr`, which is planned and not runnable yet until `src/runway/cli.ts` exists.

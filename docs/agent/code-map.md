@@ -1,5 +1,10 @@
 # Runway Code Map
 
+## Jump Links
+
+- [Key Folders](#key-folders)
+- [Planned Later](#planned-later)
+
 ## Key Folders
 
 - Current source lives in `src/runway/index.ts`
