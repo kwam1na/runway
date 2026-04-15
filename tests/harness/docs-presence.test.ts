@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { runCli } from "../../src/runway/cli.js";
 
 describe("agent docs", () => {
-  it("provides the root and local onboarding docs", () => {
+  it("provides the root and local onboarding docs", async () => {
     const root = process.cwd();
     const readme = readFileSync(resolve(root, "README.md"), "utf8");
     const agents = readFileSync(resolve(root, "AGENTS.md"), "utf8");
@@ -28,6 +29,17 @@ describe("agent docs", () => {
     expect(plannedRegistryExists).toBe(false);
     expect(plannedScenarioExists).toBe(false);
     expect(generatedGraphExists).toBe(false);
+    const checkResult = await runCli(["check"]);
+    const auditResult = await runCli(["audit"]);
+    const helpResult = await runCli(["help"]);
+    expect(helpResult.exitCode).toBe(0);
+    expect(helpResult.stdout).toContain("generate");
+    expect(helpResult.stdout).toContain("check");
+    expect(helpResult.stdout).toContain("audit");
+    expect(checkResult.exitCode).toBe(0);
+    expect(checkResult.stdout).toBe("stub:check");
+    expect(auditResult.exitCode).toBe(0);
+    expect(auditResult.stdout).toBe("stub:audit");
     expect(scripts["harness:generate"]).toBe("tsx src/runway/cli.ts generate");
     expect(scripts["harness:check"]).toBe("tsx src/runway/cli.ts check");
     expect(scripts["harness:audit"]).toBe("tsx src/runway/cli.ts audit");
@@ -37,7 +49,8 @@ describe("agent docs", () => {
 
     expect(readme).toContain("Harness Commands");
     expect(readme).toContain("The CLI command surface now exists");
-    expect(readme).toContain("scaffolded/stubbed");
+    expect(readme).toContain("scaffolded placeholders");
+    expect(readme).toContain("return `stub:*` with exit code `0`");
     expect(readme).toContain("npm run harness:generate");
     expect(readme).toContain("npm run harness:check");
     expect(readme).toContain("npm run harness:audit");
@@ -47,8 +60,8 @@ describe("agent docs", () => {
     expect(agents).toContain("docs/agent/index.md");
     expect(agents).toContain("CLI command surface lives in `src/runway/cli.ts`");
     expect(agents).toContain("graphify-out/` is generated later");
-    expect(agents).toContain("scaffolded through the CLI surface");
-    expect(agents).toContain("available through the scaffolded CLI surface");
+    expect(agents).toContain("scaffolded CLI surface");
+    expect(agents).toContain("stubbed placeholders");
     expect(agents).toContain("npm run harness:check");
     expect(agents).toContain("npm run harness:audit");
     expect(agents).toContain("npm run harness:behavior");
@@ -78,6 +91,7 @@ describe("agent docs", () => {
     expect(index).toContain("src/runway/cli.ts");
     expect(index).toContain("npm run harness:check");
     expect(index).toContain("scaffolded through `src/runway/cli.ts`");
+    expect(index).toContain("stub:check");
     expect(index).toContain("src/runway/harness/app-registry.ts");
     expect(index).toContain("src/runway/scenarios/inventory.ts");
     expect(indexSections[1]).toContain("src/runway/harness/app-registry.ts");
@@ -121,7 +135,8 @@ describe("agent docs", () => {
     expect(testing).toContain("## Harness Repair");
     expect(testing).toContain("## Manual Extras");
     expect(testing).toContain("npm run validate:pr");
-    expect(testing).toContain("present now as part of the scaffolded CLI surface");
+    expect(testing).toContain("scaffolded CLI surface");
+    expect(testing).toContain("stub:*");
     expect(testing).toContain("npm run harness:inferential-review");
     expect(testing).toContain("npm run harness:scorecard");
     expect(testing).toContain("Manual Extras");
@@ -129,7 +144,8 @@ describe("agent docs", () => {
     expect(testing).toContain("extra manual check");
     expect(testingSections[0]).toContain("Validation Ladder");
     expect(testingSections[0]).toContain("npm run validate:pr");
-    expect(testingSections[0]).toContain("present now as part of the scaffolded CLI surface");
+    expect(testingSections[0]).toContain("scaffolded CLI surface");
+    expect(testingSections[0]).toContain("stub:*");
     expect(testingSections[0]).not.toContain("npm run harness:behavior");
     expect(testingSections[1]).toContain("npm run harness:behavior");
 
@@ -162,5 +178,7 @@ describe("agent docs", () => {
     expect(agents).not.toContain("planned for the next bootstrap tasks");
     expect(agents).toContain("graphify-out/");
     expect(agents).toContain("Current onboarding docs live in `docs/agent/`");
+    expect(readme).toContain("stub:*");
+    expect(agents).toContain("stub:*");
   });
 });

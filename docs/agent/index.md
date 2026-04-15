@@ -25,7 +25,7 @@
 
 ## Common Validations
 
-`npm run harness:check` is scaffolded through `src/runway/cli.ts`; deeper harness implementation is planned later.
+`npm run harness:check` is scaffolded through `src/runway/cli.ts` and currently returns `stub:check` with exit code `0`; deeper harness implementation is planned later.
 
 - `npm run typecheck`
 - `npm run test`

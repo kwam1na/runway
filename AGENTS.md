@@ -13,7 +13,7 @@ Read `docs/agent/index.md` before scanning source files.
 
 ## Validation
 
-These validation commands are available through the scaffolded CLI surface while deeper harness work lands.
+These validation commands are available through the scaffolded CLI surface as stubbed placeholders that return `stub:*` with exit code `0`.
 
 - `npm run harness:check`
 - `npm run harness:audit`

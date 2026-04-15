@@ -8,7 +8,7 @@
 
 ## Validation Ladder
 
-This mirrors `npm run validate:pr`, which is present now as part of the scaffolded CLI surface.
+This mirrors `npm run validate:pr`, which is present now as part of the scaffolded CLI surface, but the harness steps still run as `stub:*` placeholders rather than full validations.
 
 1. `npm run typecheck`
 2. `npm run test`
