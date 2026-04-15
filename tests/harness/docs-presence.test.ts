@@ -17,11 +17,17 @@ describe("agent docs", () => {
     const cliExists = existsSync(resolve(root, "src/runway/cli.ts"));
     const currentSourceExists = existsSync(resolve(root, "src/runway/index.ts"));
     const currentDocsDirExists = existsSync(resolve(root, "docs/agent"));
+    const plannedRegistryExists = existsSync(resolve(root, "src/runway/harness/app-registry.ts"));
+    const plannedScenarioExists = existsSync(resolve(root, "src/runway/scenarios/inventory.ts"));
+    const generatedGraphExists = existsSync(resolve(root, "graphify-out"));
     const scripts = packageJson.scripts ?? {};
 
     expect(cliExists).toBe(false);
     expect(currentSourceExists).toBe(true);
     expect(currentDocsDirExists).toBe(true);
+    expect(plannedRegistryExists).toBe(false);
+    expect(plannedScenarioExists).toBe(false);
+    expect(generatedGraphExists).toBe(false);
     expect(scripts["harness:generate"]).toBe("tsx src/runway/cli.ts generate");
     expect(scripts["harness:check"]).toBe("tsx src/runway/cli.ts check");
     expect(scripts["harness:audit"]).toBe("tsx src/runway/cli.ts audit");
@@ -42,6 +48,7 @@ describe("agent docs", () => {
     expect(agents).toContain("generated later");
     expect(agents).toContain("planned for the next bootstrap tasks");
     expect(agents).toContain("not available yet");
+    expect(agents).toContain("Regeneration with `npm run harness:generate` is planned for a later bootstrap task");
     expect(agents).toContain("npm run harness:check");
     expect(agents).toContain("npm run harness:audit");
     expect(agents).toContain("npm run harness:behavior");
@@ -75,6 +82,9 @@ describe("agent docs", () => {
     expect(index).toContain("src/runway/cli.ts");
     expect(index).toContain("src/runway/harness/app-registry.ts");
     expect(index).toContain("src/runway/scenarios/inventory.ts");
+    expect(indexSections[1]).toContain("src/runway/cli.ts");
+    expect(indexSections[1]).toContain("src/runway/harness/app-registry.ts");
+    expect(indexSections[1]).toContain("src/runway/scenarios/inventory.ts");
     expect(indexSections[0]).toContain("Current manual onboarding docs");
     expect(indexSections[0]).toContain("docs/agent/");
     expect(indexSections[0]).toContain("graphify-out/");
@@ -153,6 +163,7 @@ describe("agent docs", () => {
     expect(readme).not.toContain("Harness Commands\n\n- `npm run harness:generate`");
     expect(agents).toContain(agentsAvailabilityLine);
     expect(agents).not.toContain("Validation\n\n- `npm run harness:check`");
+    expect(agents).toContain("planned for a later bootstrap task");
     expect(readme).toContain(
       cliExists
         ? "are usable now"
@@ -163,5 +174,7 @@ describe("agent docs", () => {
         ? "available now"
         : "are planned for the next bootstrap tasks and are not available yet in this checkout because `src/runway/cli.ts` does not exist.",
     );
+    expect(agents).toContain("graphify-out/");
+    expect(agents).toContain("Current onboarding docs live in `docs/agent/`");
   });
 });

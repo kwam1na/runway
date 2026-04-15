@@ -8,7 +8,7 @@ Read `docs/agent/index.md` before scanning source files.
 
 - Current onboarding docs live in `docs/agent/`
 - `graphify-out/` is generated later by `npm run harness:generate`
-- Regenerate generated docs with `npm run harness:generate`
+- Regeneration with `npm run harness:generate` is planned for a later bootstrap task and is not available yet until `src/runway/cli.ts` exists
 
 ## Validation
 
