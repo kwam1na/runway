@@ -1,0 +1,31 @@
+{
+  "name": "runway",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "harness:generate": "tsx src/runway/cli.ts generate",
+    "harness:check": "tsx src/runway/cli.ts check",
+    "harness:review": "tsx src/runway/cli.ts review",
+    "harness:audit": "tsx src/runway/cli.ts audit",
+    "harness:behavior": "tsx src/runway/cli.ts behavior",
+    "harness:inferential-review": "tsx src/runway/cli.ts inferential-review",
+    "harness:runtime-trends": "tsx src/runway/cli.ts runtime-trends",
+    "harness:scorecard": "tsx src/runway/cli.ts scorecard",
+    "harness:janitor": "tsx src/runway/cli.ts janitor",
+    "harness:test": "vitest run tests/harness",
+    "validate:pr": "npm run typecheck && npm run test && npm run harness:check && npm run harness:audit && npm run harness:inferential-review && npm run harness:scorecard"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0"
+  }
+}
