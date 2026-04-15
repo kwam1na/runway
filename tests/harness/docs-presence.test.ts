@@ -4,20 +4,38 @@ import { resolve } from "node:path";
 
 describe("agent docs", () => {
   it("provides the root and local onboarding docs", () => {
+    const readme = readFileSync(resolve(process.cwd(), "README.md"), "utf8");
     const agents = readFileSync(resolve(process.cwd(), "AGENTS.md"), "utf8");
     const index = readFileSync(resolve(process.cwd(), "docs/agent/index.md"), "utf8");
     const architecture = readFileSync(resolve(process.cwd(), "docs/agent/architecture.md"), "utf8");
     const testing = readFileSync(resolve(process.cwd(), "docs/agent/testing.md"), "utf8");
     const codeMap = readFileSync(resolve(process.cwd(), "docs/agent/code-map.md"), "utf8");
 
+    expect(readme).toContain("Harness Commands");
+    expect(readme).toContain("planned for the next bootstrap tasks");
+    expect(readme).toContain("not usable yet");
+    expect(readme).toContain("npm run harness:generate");
+    expect(readme).toContain("npm run harness:check");
+    expect(readme).toContain("npm run harness:audit");
+    expect(readme).toContain("npm run validate:pr");
+
     expect(agents).toContain("Start here");
     expect(agents).toContain("docs/agent/index.md");
     expect(agents).toContain("generated later");
+    expect(agents).toContain("planned for the next bootstrap tasks");
+    expect(agents).toContain("not available yet");
+    expect(agents).toContain("npm run harness:check");
+    expect(agents).toContain("npm run harness:audit");
+    expect(agents).toContain("npm run harness:behavior");
+    expect(agents).toContain("npm run validate:pr");
 
     const indexSections = index.split("\n## Planned Later\n");
     const architectureSections = architecture.split("\n## Planned Later\n");
     const codeMapSections = codeMap.split("\n## Planned Later\n");
     const testingSections = testing.split("\n## Manual Extras\n");
+
+    const readmeAvailabilityLine = "These are planned for the next bootstrap tasks and are not usable yet in this checkout because `src/runway/cli.ts` does not exist.";
+    const agentsAvailabilityLine = "These validation commands are planned for the next bootstrap tasks and are not available yet in this checkout because `src/runway/cli.ts` does not exist.";
 
     expect(index).toContain("Scope");
     expect(index).toContain("Planned Later");
@@ -70,5 +88,10 @@ describe("agent docs", () => {
     expect(codeMapSections[1]).toContain("src/runway/cli.ts");
     expect(codeMapSections[1]).toContain("src/runway/agents/");
     expect(codeMapSections[1]).toContain("src/runway/finance/");
+
+    expect(readme).toContain(readmeAvailabilityLine);
+    expect(readme).not.toContain("Harness Commands\n\n- `npm run harness:generate`");
+    expect(agents).toContain(agentsAvailabilityLine);
+    expect(agents).not.toContain("Validation\n\n- `npm run harness:check`");
   });
 });

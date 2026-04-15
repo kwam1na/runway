@@ -12,6 +12,8 @@ Read `docs/agent/index.md` before scanning source files.
 
 ## Validation
 
+These validation commands are planned for the next bootstrap tasks and are not available yet in this checkout because `src/runway/cli.ts` does not exist.
+
 - `npm run harness:check`
 - `npm run harness:audit`
 - `npm run harness:behavior`
