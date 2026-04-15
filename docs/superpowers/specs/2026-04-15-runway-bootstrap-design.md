@@ -1,19 +1,19 @@
-# Agent Harness Bootstrap Design
+# Runway Bootstrap Design
 
 ## Summary
 
-Bootstrap `/Users/kwamina/Desktop/agent` as a git-backed, CLI-first Python repository whose primary product is an agentic harness system. The initial repository must be usable as both:
+Bootstrap `/Users/kwamina/Desktop/agent` as a git-backed, CLI-first Python repository for `runway`, an agentic system to assist in personal finances. The initial repository must be usable as both:
 
-- the implementation home for harness scripts, checks, generators, and scenario runners
-- the first harnessed target that future agents can navigate, validate, and repair
+- the implementation home for runway scripts, agent workflows, checks, generators, and scenario runners
+- the first harnessed target that future agents can navigate, validate, and repair while the product surface is still forming
 
-The design optimizes for uncertain future runtime needs. It does not force an early service or worker abstraction, but it leaves clean expansion points for both.
+The design optimizes for uncertain early product runtime needs. It does not force an early service or worker abstraction, but it leaves clean expansion points for both as runway grows beyond its first CLI-first tooling layer.
 
 ## Goals
 
-- Initialize the repository as a git-backed Python project.
+- Initialize the repository as a git-backed Python project for runway.
 - Establish a repo-level and local navigation layer for future agents.
-- Make the harness package itself the first documented and validated target.
+- Make the first runway package itself the first documented and validated target.
 - Generate machine-readable validation coverage and discovery docs from Python source-of-truth data.
 - Provide repo-level harness commands for generation, checking, review, audit, behavior runs, scorecards, and repair.
 - Add CI and harness self-tests so the harness can detect its own drift.
@@ -26,13 +26,14 @@ The design optimizes for uncertain future runtime needs. It does not force an ea
 
 ## Recommended Approach
 
-Adopt a CLI-first Python harness repository.
+Adopt a CLI-first Python repository for runway with a built-in agent harness.
 
 This keeps the first version small and flexible:
 
 - the repository exposes a Python CLI entrypoint for harness operations
 - runtime behavior is modeled as structured CLI scenarios rather than a long-running server contract
 - future services, workers, or additional packages can be added as new harness registry entries without reshaping the base repo
+- the first implementation focus stays on agent-oriented workflows and repository health rather than prematurely locking runway into a delivery channel
 
 ## Repository Shape
 
@@ -62,14 +63,16 @@ agent/
 ├── pyproject.toml
 ├── scripts/
 ├── src/
-│   └── agent_harness/
+│   └── runway/
 │       ├── cli.py
+│       ├── finance/
 │       ├── harness/
+│       ├── agents/
 │       └── scenarios/
 └── tests/
 ```
 
-This repo does not create a fake app directory solely to satisfy the harness pattern. Instead, the repo-level `docs/agent/` folder acts as the local operating manual for the first harnessed target: the harness tooling package itself.
+This repo does not create a fake app directory solely to satisfy the harness pattern. Instead, the repo-level `docs/agent/` folder acts as the local operating manual for the first harnessed target: the runway package itself.
 
 ## Navigation Model
 
@@ -77,7 +80,7 @@ Future agents should enter through root `AGENTS.md`.
 
 `AGENTS.md` must explain:
 
-- that this repo is a CLI-first agent harness system
+- that this repo is the home of runway, an agentic personal-finance system
 - where generated navigation output lives
 - that agents should read `docs/agent/index.md` before scanning source
 - when graph and index artifacts must be regenerated
@@ -86,7 +89,7 @@ Future agents should enter through root `AGENTS.md`.
 The generated navigation layer should include:
 
 - a repo wiki or index in `graphify-out/`
-- an app or package landing page for the harness package
+- an app or package landing page for the runway package
 - generated discovery indexes in `docs/agent/`
 
 Generated navigation should be rebuilt, not hand-maintained.
@@ -99,9 +102,9 @@ The harness should follow a single pattern:
 
 Authoritative sources:
 
-- `src/agent_harness/harness/app_registry.py`
+- `src/runway/harness/app_registry.py`
   Declares harnessed targets, audited roots, expected docs, key folders, and validation surfaces.
-- `src/agent_harness/scenarios/inventory.py`
+- `src/runway/scenarios/inventory.py`
   Declares runtime or behavior scenarios in structured Python data.
 - Hand-maintained docs:
   - `AGENTS.md`
@@ -122,16 +125,16 @@ Derived outputs:
 
 ## Initial Harnessed Target
 
-The first and only required target during bootstrap is the harness tooling package.
+The first and only required target during bootstrap is the runway package.
 
 Recommended target shape:
 
-- label: `agent-harness`
-- path: `src/agent_harness`
+- label: `runway`
+- path: `src/runway`
 - archetype: `library`
 - onboarding status: active
 - audited roots:
-  - `src/agent_harness`
+  - `src/runway`
   - `docs/agent`
   - `tests`
   - `.github/workflows`
@@ -142,12 +145,14 @@ Recommended target shape:
   - `docs/agent/code-map.md`
 - key folder groups:
   - CLI entrypoints
+  - finance domain logic
+  - agent workflows
   - harness logic
   - scenario definitions
   - tests
   - generated docs
 
-Although the archetype is modeled as `library` for harness purposes, the package still exposes a CLI. This choice keeps the validation and documentation model simple while avoiding premature service assumptions.
+Although the archetype is modeled as `library` for harness purposes, the package still exposes a CLI. This choice keeps the validation and documentation model simple while avoiding premature service assumptions about how runway will ultimately serve users.
 
 ## Command Surface
 
@@ -199,9 +204,11 @@ Validation coverage should be generated from registry data, not hand-maintained 
 
 Initial validation surfaces should include:
 
-- `src/agent_harness/cli.py`
-- `src/agent_harness/harness/`
-- `src/agent_harness/scenarios/`
+- `src/runway/cli.py`
+- `src/runway/finance/`
+- `src/runway/agents/`
+- `src/runway/harness/`
+- `src/runway/scenarios/`
 - `docs/agent/`
 - `tests/`
 - `.github/workflows/`
@@ -225,7 +232,7 @@ Because the repo is CLI-first, the initial scenario set should focus on non-dest
 
 The first required scenario is:
 
-- `cli-harness-smoke`
+- `cli-runway-smoke`
 
 Recommended behavior:
 
@@ -236,6 +243,8 @@ Recommended behavior:
 - emit a machine-readable behavior report to `artifacts/`
 
 Future service, worker, or browser scenarios can be added later as new inventory entries without changing the base harness contract.
+
+As the product becomes clearer, additional scenarios can represent user-observable finance workflows such as ingestion, categorization, planning, or reporting. Those should only be added when the corresponding product surfaces exist.
 
 ## Documentation Model
 
@@ -259,7 +268,7 @@ Generated docs must clearly state that they are generated and should be regenera
 
 ## CI Model
 
-CI should run the harness as both a user-facing system and a self-policing system.
+CI should run runway's harness as both a user-facing system and a self-policing system.
 
 The bootstrap should include workflow wiring that:
 
@@ -293,7 +302,7 @@ Bootstrap should proceed in this order:
 
 1. Initialize git and Python project metadata.
 2. Create root navigation and local agent docs.
-3. Create the Python package skeleton and CLI entrypoint.
+3. Create the `src/runway` package skeleton and CLI entrypoint.
 4. Add the harness registry, generators, checks, review and audit logic, and behavior scenario inventory.
 5. Generate derived docs and validation coverage.
 6. Add harness self-tests and CI.
@@ -330,7 +339,7 @@ Bootstrap is successful when:
 
 - the repo is initialized in git
 - an agent can start at `AGENTS.md` and reach the correct local docs without guesswork
-- the harness package is registered as a documented and validated target
+- the runway package is registered as a documented and validated target
 - generated discovery docs and validation coverage can be rebuilt deterministically
 - changed files can be mapped to an honest validation set
 - uncovered files fail audit
