@@ -18,6 +18,8 @@
 
 ## Common Validations
 
+`npm run harness:check` is planned and not runnable yet until `src/runway/cli.ts` exists.
+
 - `npm run typecheck`
 - `npm run test`
 - `npm run harness:check`

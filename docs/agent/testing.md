@@ -2,7 +2,7 @@
 
 ## Validation Ladder
 
-This mirrors `npm run validate:pr`.
+This mirrors `npm run validate:pr`, which is planned and not runnable yet until `src/runway/cli.ts` exists.
 
 1. `npm run typecheck`
 2. `npm run test`

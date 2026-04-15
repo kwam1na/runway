@@ -15,9 +15,13 @@ describe("agent docs", () => {
       scripts?: Record<string, string>;
     };
     const cliExists = existsSync(resolve(root, "src/runway/cli.ts"));
+    const currentSourceExists = existsSync(resolve(root, "src/runway/index.ts"));
+    const currentDocsDirExists = existsSync(resolve(root, "docs/agent"));
     const scripts = packageJson.scripts ?? {};
 
     expect(cliExists).toBe(false);
+    expect(currentSourceExists).toBe(true);
+    expect(currentDocsDirExists).toBe(true);
     expect(scripts["harness:generate"]).toBe("tsx src/runway/cli.ts generate");
     expect(scripts["harness:check"]).toBe("tsx src/runway/cli.ts check");
     expect(scripts["harness:audit"]).toBe("tsx src/runway/cli.ts audit");
@@ -58,6 +62,8 @@ describe("agent docs", () => {
     expect(index).toContain("docs/agent/");
     expect(index).toContain("graphify-out/");
     expect(index).toContain("src/runway/index.ts");
+    expect(index).toContain("npm run harness:check");
+    expect(index).toContain("planned and not runnable yet");
     expect(index).toContain("src/runway/cli.ts");
     expect(index).toContain("src/runway/harness/app-registry.ts");
     expect(index).toContain("src/runway/scenarios/inventory.ts");
@@ -67,6 +73,8 @@ describe("agent docs", () => {
     expect(indexSections[0]).not.toContain("src/runway/cli.ts");
     expect(indexSections[0]).not.toContain("src/runway/harness/app-registry.ts");
     expect(indexSections[0]).not.toContain("src/runway/scenarios/inventory.ts");
+    expect(indexSections[1]).toContain("npm run harness:check");
+    expect(indexSections[1]).toContain("planned and not runnable yet");
     expect(indexSections[1]).toContain("src/runway/cli.ts");
     expect(indexSections[1]).toContain("src/runway/harness/app-registry.ts");
     expect(indexSections[1]).toContain("src/runway/scenarios/inventory.ts");
@@ -89,6 +97,7 @@ describe("agent docs", () => {
 
     expect(testing).toContain("Validation Ladder");
     expect(testing).toContain("npm run validate:pr");
+    expect(testing).toContain("planned and not runnable yet until `src/runway/cli.ts` exists");
     expect(testing).toContain("npm run harness:inferential-review");
     expect(testing).toContain("npm run harness:scorecard");
     expect(testing).toContain("Manual Extras");
@@ -96,6 +105,7 @@ describe("agent docs", () => {
     expect(testing).toContain("extra manual check");
     expect(testingSections[0]).toContain("Validation Ladder");
     expect(testingSections[0]).toContain("npm run validate:pr");
+    expect(testingSections[0]).toContain("planned and not runnable yet until `src/runway/cli.ts` exists");
     expect(testingSections[0]).not.toContain("npm run harness:behavior");
     expect(testingSections[1]).toContain("npm run harness:behavior");
 
