@@ -20,6 +20,8 @@ This file is generated from the harness registry.
 - Commands:
 - `npm run typecheck`
 - `npm run test`
+- `npm run harness:generate`
+- `npm run harness:check`
 - Behavior scenarios:
 - none
 
@@ -30,6 +32,8 @@ This file is generated from the harness registry.
 - Commands:
 - `npm run typecheck`
 - `npm run test`
+- `npm run harness:generate`
+- `npm run harness:check`
 - Behavior scenarios:
 - `cli-runway-smoke`
 

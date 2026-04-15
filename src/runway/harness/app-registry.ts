@@ -36,6 +36,8 @@ export const harnessTargets = [
         commands: [
           { kind: "npm", script: "typecheck" },
           { kind: "npm", script: "test" },
+          { kind: "npm", script: "harness:generate" },
+          { kind: "npm", script: "harness:check" },
         ],
         behaviorScenarios: [],
       },
@@ -45,6 +47,8 @@ export const harnessTargets = [
         commands: [
           { kind: "npm", script: "typecheck" },
           { kind: "npm", script: "test" },
+          { kind: "npm", script: "harness:generate" },
+          { kind: "npm", script: "harness:check" },
         ],
         behaviorScenarios: ["cli-runway-smoke"],
       },

@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { runCli } from "../../src/runway/cli.js";
+import { harnessTargets } from "../../src/runway/harness/app-registry.js";
 
 const originalCwd = process.cwd();
 const tempDirs: string[] = [];
@@ -104,6 +105,21 @@ describe("harness command behavior", () => {
     });
   });
 
+  it("includes regeneration and freshness checks for generator inputs", async () => {
+    await inWorkspace(async () => {
+      const result = await runCli(["review", "src/runway/harness/generate.ts"]);
+      expect(result.exitCode).toBe(0);
+
+      const payload = JSON.parse(result.stdout) as {
+        scripts: string[];
+        touchedFiles: string[];
+      };
+
+      expect(payload.touchedFiles).toEqual(["src/runway/harness/generate.ts"]);
+      expect(payload.scripts).toEqual(["typecheck", "test", "harness:generate", "harness:check"]);
+    });
+  });
+
   it("fails check when a required generated artifact is missing", async () => {
     await inWorkspace(async (workspace) => {
       const generateResult = await runCli(["generate"]);
@@ -139,6 +155,63 @@ describe("harness command behavior", () => {
       const result = await runCli(["audit"]);
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain("graphify-out/uncovered.md");
+    });
+  });
+
+  it("fails audit when required graph output is missing", async () => {
+    await inWorkspace(async (workspace) => {
+      const generateResult = await runCli(["generate"]);
+      expect(generateResult.exitCode).toBe(0);
+
+      rmSync(resolve(workspace, "graphify-out"), { recursive: true, force: true });
+
+      const result = await runCli(["audit"]);
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain("graphify-out/index.md");
+      expect(result.stderr).toContain("Missing generated artifact");
+    });
+  });
+
+  it("fails audit in candidate mode when a requested file is missing", async () => {
+    await inWorkspace(async (workspace) => {
+      const generateResult = await runCli(["generate"]);
+      expect(generateResult.exitCode).toBe(0);
+
+      rmSync(resolve(workspace, "graphify-out/index.md"));
+
+      const result = await runCli(["audit", "graphify-out/index.md"]);
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain("graphify-out/index.md");
+      expect(result.stderr).toContain("Missing candidate file");
+    });
+  });
+
+  it("fails audit when a generated artifact loses validation-surface coverage", async () => {
+    await inWorkspace(async () => {
+      const generatedDocsSurface = harnessTargets[0].validationSurfaces.find(
+        (surface) => surface.name === "generated docs",
+      );
+      expect(generatedDocsSurface).toBeDefined();
+
+      const originalPrefixes = [...generatedDocsSurface!.pathPrefixes];
+
+      try {
+        ((generatedDocsSurface!.pathPrefixes as unknown) as string[]).splice(
+          originalPrefixes.indexOf("docs/agent/entry-index.md"),
+          1,
+        );
+
+        const result = await runCli(["audit", "docs/agent/entry-index.md"]);
+        expect(result.exitCode).toBe(1);
+        expect(result.stderr).toContain("docs/agent/entry-index.md");
+        expect(result.stderr).toContain("Validation surface coverage missing");
+      } finally {
+        ((generatedDocsSurface!.pathPrefixes as unknown) as string[]).splice(
+          0,
+          generatedDocsSurface!.pathPrefixes.length,
+          ...originalPrefixes,
+        );
+      }
     });
   });
 });

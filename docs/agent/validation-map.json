@@ -86,6 +86,14 @@
             {
               "kind": "npm",
               "script": "test"
+            },
+            {
+              "kind": "npm",
+              "script": "harness:generate"
+            },
+            {
+              "kind": "npm",
+              "script": "harness:check"
             }
           ],
           "behaviorScenarios": []
@@ -103,6 +111,14 @@
             {
               "kind": "npm",
               "script": "test"
+            },
+            {
+              "kind": "npm",
+              "script": "harness:generate"
+            },
+            {
+              "kind": "npm",
+              "script": "harness:check"
             }
           ],
           "behaviorScenarios": [
@@ -223,6 +239,14 @@
         {
           "kind": "npm",
           "script": "test"
+        },
+        {
+          "kind": "npm",
+          "script": "harness:generate"
+        },
+        {
+          "kind": "npm",
+          "script": "harness:check"
         }
       ],
       "behaviorScenarios": []
@@ -240,6 +264,14 @@
         {
           "kind": "npm",
           "script": "test"
+        },
+        {
+          "kind": "npm",
+          "script": "harness:generate"
+        },
+        {
+          "kind": "npm",
+          "script": "harness:check"
         }
       ],
       "behaviorScenarios": [
