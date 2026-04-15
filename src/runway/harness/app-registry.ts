@@ -6,7 +6,7 @@ export const harnessTargets = [
     repoPath: "src/runway",
     archetype: "library",
     onboardingStatus: "active",
-    auditedRoots: ["src/runway", "docs/agent", "tests", ".github/workflows"],
+    auditedRoots: ["src/runway", "docs/agent", "tests", ".github/workflows", "graphify-out"],
     requiredDocs: [
       "docs/agent/index.md",
       "docs/agent/architecture.md",

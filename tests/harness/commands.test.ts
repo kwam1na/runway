@@ -89,6 +89,21 @@ describe("harness command behavior", () => {
     });
   });
 
+  it("orders regeneration ahead of freshness checks for docs changes", async () => {
+    await inWorkspace(async () => {
+      const result = await runCli(["review", "docs/agent/index.md"]);
+      expect(result.exitCode).toBe(0);
+
+      const payload = JSON.parse(result.stdout) as {
+        scripts: string[];
+        touchedFiles: string[];
+      };
+
+      expect(payload.touchedFiles).toEqual(["docs/agent/index.md"]);
+      expect(payload.scripts).toEqual(["test", "harness:generate", "harness:check"]);
+    });
+  });
+
   it("fails check when a required generated artifact is missing", async () => {
     await inWorkspace(async (workspace) => {
       const generateResult = await runCli(["generate"]);
@@ -111,6 +126,19 @@ describe("harness command behavior", () => {
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain("Uncovered files");
       expect(result.stderr).toContain("src/runway/uncovered.ts");
+    });
+  });
+
+  it("fails audit when graph output contains uncovered files", async () => {
+    await inWorkspace(async (workspace) => {
+      const generateResult = await runCli(["generate"]);
+      expect(generateResult.exitCode).toBe(0);
+
+      writeFileSync(resolve(workspace, "graphify-out/uncovered.md"), "# stray graph output\n", "utf8");
+
+      const result = await runCli(["audit"]);
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain("graphify-out/uncovered.md");
     });
   });
 });

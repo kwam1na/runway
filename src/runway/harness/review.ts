@@ -10,6 +10,15 @@ export type ValidationSelection = {
 const commandOrder = new Map([
   ["typecheck", 0],
   ["test", 1],
+  ["harness:generate", 2],
+  ["harness:check", 3],
+  ["harness:review", 4],
+  ["harness:audit", 5],
+  ["harness:behavior", 6],
+  ["harness:inferential-review", 7],
+  ["harness:runtime-trends", 8],
+  ["harness:scorecard", 9],
+  ["harness:janitor", 10],
 ]);
 
 function matchesPrefix(file: string, prefix: string): boolean {

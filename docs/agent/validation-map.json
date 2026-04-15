@@ -11,7 +11,8 @@
         "src/runway",
         "docs/agent",
         "tests",
-        ".github/workflows"
+        ".github/workflows",
+        "graphify-out"
       ],
       "requiredDocs": [
         "docs/agent/index.md",

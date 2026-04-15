@@ -11,3 +11,4 @@ This file is generated from the harness registry.
 - `docs/agent`
 - `tests`
 - `.github/workflows`
+- `graphify-out`

@@ -8,7 +8,7 @@
 
 ## Validation Ladder
 
-This mirrors `npm run validate:pr`. The generate, check, review, and audit harness steps are deterministic registry-backed validations.
+This starts with `npm run validate:pr` and adds the registry-refresh steps you should run when docs, generated outputs, or validation coverage change. The generate, check, review, and audit harness steps are deterministic registry-backed validations.
 
 1. `npm run typecheck`
 2. `npm run test`
