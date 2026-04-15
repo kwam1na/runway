@@ -26,9 +26,9 @@ describe("agent docs", () => {
     expect(cliExists).toBe(true);
     expect(currentSourceExists).toBe(true);
     expect(currentDocsDirExists).toBe(true);
-    expect(plannedRegistryExists).toBe(false);
-    expect(plannedScenarioExists).toBe(false);
-    expect(generatedGraphExists).toBe(false);
+    expect(plannedRegistryExists).toBe(true);
+    expect(plannedScenarioExists).toBe(true);
+    expect(generatedGraphExists).toBe(true);
     const checkResult = await runCli(["check"]);
     const auditResult = await runCli(["audit"]);
     const helpResult = await runCli(["help"]);
