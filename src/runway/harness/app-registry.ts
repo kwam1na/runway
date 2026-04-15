@@ -1,6 +1,6 @@
 import type { HarnessTarget } from "./types.js";
 
-export const harnessTargets: HarnessTarget[] = [
+export const harnessTargets = [
   {
     label: "runway",
     repoPath: "src/runway",
@@ -32,4 +32,4 @@ export const harnessTargets: HarnessTarget[] = [
       },
     ],
   },
-];
+] as const satisfies readonly HarnessTarget[];

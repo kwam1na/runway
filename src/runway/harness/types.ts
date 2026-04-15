@@ -1,33 +1,33 @@
 export type HarnessCommand = {
-  kind: "npm";
-  script: string;
+  readonly kind: "npm";
+  readonly script: string;
 };
 
 export type ValidationSurface = {
-  name: string;
-  pathPrefixes: string[];
-  commands: HarnessCommand[];
-  behaviorScenarios?: string[];
-  note?: string;
+  readonly name: string;
+  readonly pathPrefixes: readonly string[];
+  readonly commands: readonly HarnessCommand[];
+  readonly behaviorScenarios?: readonly string[];
+  readonly note?: string;
 };
 
 export type HarnessTarget = {
-  label: string;
-  repoPath: string;
-  archetype: "library" | "service" | "worker" | "webapp";
-  onboardingStatus: "active" | "draft";
-  auditedRoots: string[];
-  requiredDocs: string[];
-  keyFolderGroups: Array<{
+  readonly label: string;
+  readonly repoPath: string;
+  readonly archetype: "library" | "service" | "worker" | "webapp";
+  readonly onboardingStatus: "active" | "draft";
+  readonly auditedRoots: readonly string[];
+  readonly requiredDocs: readonly string[];
+  readonly keyFolderGroups: readonly Readonly<{
     label: string;
-    paths: string[];
-  }>;
-  validationSurfaces: ValidationSurface[];
+    paths: readonly string[];
+  }>[];
+  readonly validationSurfaces: readonly ValidationSurface[];
 };
 
 export type BehaviorScenario = {
-  name: string;
-  description: string;
-  command: string[];
-  artifactPath: string;
+  readonly name: string;
+  readonly description: string;
+  readonly command: readonly string[];
+  readonly artifactPath: string;
 };
