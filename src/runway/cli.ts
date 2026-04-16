@@ -18,7 +18,11 @@ import { selectValidationsForFiles } from "./harness/review.js";
 import { buildRuntimeTrends } from "./harness/runtime-trends.js";
 import { buildScorecard } from "./harness/scorecard.js";
 import { analyzeProfileFile } from "./finance/analysis-runner.js";
-import { resolveDefaultProfilePath, runInteractiveAssist } from "./interactive-assist.js";
+import {
+  buildStatementIngestionRequest,
+  resolveDefaultProfilePath,
+  runInteractiveAssist,
+} from "./interactive-assist.js";
 
 const supportedCommands = [
   "analyze",
@@ -144,10 +148,22 @@ export async function runCli(args: string[]): Promise<CliResult> {
   }
 
   if (command === "assist") {
-    const profilePath = args[1];
-    const patchPath = args[2];
+    const assistArgs = args.slice(1);
+    const statementRequest = buildStatementIngestionRequest(assistArgs);
+    const statementMarkerIndex = assistArgs.indexOf("--statements");
+    const positionalArgs = statementMarkerIndex >= 0 ? assistArgs.slice(0, statementMarkerIndex) : assistArgs;
+    const profilePath = positionalArgs[0];
+    const patchPath = positionalArgs[1];
     const interactiveSession = isInteractiveAssistSession(patchPath);
     const resolvedProfilePath = profilePath ?? (interactiveSession ? await resolveDefaultProfilePath() : undefined);
+
+    if (statementMarkerIndex >= 0 && statementRequest.statementPaths.length === 0) {
+      return {
+        exitCode: 1,
+        stdout: "",
+        stderr: "Usage: assist [profile-path] [answer-patch-path] [--statements <file> ...]",
+      };
+    }
 
     if (!resolvedProfilePath) {
       return {
@@ -163,6 +179,9 @@ export async function runCli(args: string[]): Promise<CliResult> {
           profilePath: resolvedProfilePath,
           ask: askInteractiveQuestion,
           isInteractive: true,
+          ...(statementRequest.statementPaths.length > 0
+            ? { statementPaths: statementRequest.statementPaths }
+            : {}),
         });
 
         return outcome.status === "needs-input"

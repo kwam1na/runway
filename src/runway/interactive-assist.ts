@@ -7,6 +7,7 @@ export type InteractiveAssistOptions = {
   profilePath: string;
   ask(question: string): Promise<string>;
   isInteractive: boolean;
+  statementPaths?: string[];
 };
 
 const DEFAULT_RUNWAY_FLOOR_MONTHS = 6;
@@ -227,6 +228,19 @@ async function readOrBootstrapProfile(
 
     return bootstrapProfile(profilePath, ask);
   }
+}
+
+export function buildStatementIngestionRequest(args: string[]): {
+  profilePath?: string;
+  statementPaths: string[];
+} {
+  const markerIndex = args.indexOf("--statements");
+  const positionalArgs = markerIndex >= 0 ? args.slice(0, markerIndex) : args;
+
+  return {
+    profilePath: positionalArgs[0],
+    statementPaths: markerIndex >= 0 ? args.slice(markerIndex + 1) : [],
+  };
 }
 
 export async function resolveDefaultProfilePath(cwd = process.cwd()): Promise<string> {

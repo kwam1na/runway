@@ -17,6 +17,7 @@ export const harnessTargets = [
     keyFolderGroups: [
       { label: "CLI entrypoints", paths: ["src/runway/cli.ts"] },
       { label: "interactive assist", paths: ["src/runway/interactive-assist.ts"] },
+      { label: "statement ingestion", paths: ["src/runway/statement-intake"] },
       { label: "finance domain logic", paths: ["src/runway/finance"] },
       { label: "agent workflows", paths: ["src/runway/agents"] },
       { label: "harness logic", paths: ["src/runway/harness"] },
@@ -49,6 +50,15 @@ export const harnessTargets = [
           { kind: "npm", script: "test" },
         ],
         behaviorScenarios: ["cli-runway-assist"],
+      },
+      {
+        name: "statement ingestion logic",
+        pathPrefixes: ["src/runway/statement-intake"],
+        commands: [
+          { kind: "npm", script: "typecheck" },
+          { kind: "npm", script: "test" },
+        ],
+        behaviorScenarios: [],
       },
       {
         name: "cli and harness logic",
