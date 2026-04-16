@@ -24,7 +24,14 @@ async function inWorkspace(assertions: (workspace: string) => Promise<void>): Pr
       const rel = relative(originalCwd, source);
       if (rel === "") return true;
 
-      return rel !== ".git" && !rel.startsWith(".git/") && rel !== "node_modules" && !rel.startsWith("node_modules/");
+      return rel !== ".git" &&
+        !rel.startsWith(".git/") &&
+        rel !== ".worktrees" &&
+        !rel.startsWith(".worktrees/") &&
+        rel !== "artifacts" &&
+        !rel.startsWith("artifacts/") &&
+        rel !== "node_modules" &&
+        !rel.startsWith("node_modules/");
     },
   });
   process.chdir(workspace);
