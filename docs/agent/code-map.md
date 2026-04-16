@@ -14,5 +14,7 @@
 - `docs/agent/`: local onboarding docs in this bootstrap checkout
 - `docs/agent/analysis-workflow.md`: agent-agnostic intake, validation, and analysis guidance
 - `src/runway/agents/`: implemented minimal agent loop for local profile progression and reruns
+- `src/runway/statement-intake/`: local credit card statement file intake, extraction, normalization, and reviewed profile updates
 - `src/runway/finance/`: finance-domain logic
+- `tests/agents/`: focused Vitest coverage for interactive assist, statement extraction, normalization, and review flows
 - `graphify-out/`: generated docs output
