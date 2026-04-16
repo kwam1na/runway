@@ -17,13 +17,17 @@ describe("ci workflow", () => {
     expect(workflow).toContain("npm run test");
     expect(workflow).toContain("npm run harness:generate");
     expect(workflow).toContain("npm run harness:check");
+    expect(workflow).toContain("npm run harness:behavior");
     expect(workflow).toContain("npm run harness:audit -- src/runway/cli.ts");
     expect(workflow).toContain("npm run harness:inferential-review");
     expect(workflow).toContain("npm run harness:scorecard");
     expect(workflow).toContain("actions/upload-artifact@v4");
 
     expect(packageJson.scripts?.["ci:harness"]).toBe(
-      "npm run typecheck && npm run test && npm run harness:generate && npm run harness:check && npm run harness:audit -- src/runway/cli.ts && npm run harness:inferential-review && npm run harness:scorecard",
+      "npm run typecheck && npm run test && npm run harness:generate && npm run harness:check && npm run harness:behavior && npm run harness:audit -- src/runway/cli.ts && npm run harness:inferential-review && npm run harness:scorecard",
+    );
+    expect(packageJson.scripts?.["validate:pr"]).toBe(
+      "npm run typecheck && npm run test && npm run harness:check && npm run harness:behavior && npm run harness:audit && npm run harness:inferential-review && npm run harness:scorecard",
     );
   });
 

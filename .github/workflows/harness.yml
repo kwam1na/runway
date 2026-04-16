@@ -21,6 +21,7 @@ jobs:
       - run: npm run test
       - run: npm run harness:generate
       - run: npm run harness:check
+      - run: npm run harness:behavior
       - run: npm run harness:audit -- src/runway/cli.ts
       - run: npm run harness:inferential-review
       - run: npm run harness:scorecard
