@@ -7,127 +7,219 @@ import type {
   PlannerRiskFlag,
 } from "./contracts.js";
 
-type CandidatePlan = {
-  paidDebtIds: string[];
-  remainingCash: number;
-  monthlyBurn: number;
-  runwayMonths: number;
-  projectedInterestCarry: number;
-  protectsFloor: boolean;
-  unpaidDebts: NormalizedDebtProfile[];
+type DebtAllocation = {
+  debt: NormalizedDebtProfile;
+  amount: number;
+  fullyPaid: boolean;
 };
 
-function generateDebtSubsets(debts: readonly NormalizedDebtProfile[]): NormalizedDebtProfile[][] {
-  const subsets: NormalizedDebtProfile[][] = [[]];
+type PlannerState = {
+  cash: number;
+  monthlyBurn: number;
+  allocations: DebtAllocation[];
+  remainingDebts: NormalizedDebtProfile[];
+};
 
-  for (const debt of debts) {
-    const nextSubsets = subsets.map((subset) => [...subset, debt]);
-    subsets.push(...nextSubsets);
+function calculateWholeRunwayMonths(cash: number, monthlyBurn: number): number {
+  if (monthlyBurn <= 0) {
+    return Number.POSITIVE_INFINITY;
   }
 
-  return subsets;
+  return Math.max(0, Math.floor(cash / monthlyBurn));
 }
 
-function evaluateCandidatePlan(
-  profile: NormalizedFinancialProfile,
-  paidDebts: readonly NormalizedDebtProfile[],
-): CandidatePlan | null {
-  const upfrontDebtPayment = paidDebts.reduce((sum, debt) => sum + debt.balance, 0);
-  const totalLiquidCash = profile.cash_position.total_liquid_cash;
+function sortDebtsForInterestPriority(debts: readonly NormalizedDebtProfile[]): NormalizedDebtProfile[] {
+  return [...debts].sort((left, right) => {
+    if (left.apr !== right.apr) {
+      return right.apr - left.apr;
+    }
 
-  if (upfrontDebtPayment > totalLiquidCash) {
+    if (left.minimum_payment !== right.minimum_payment) {
+      return right.minimum_payment - left.minimum_payment;
+    }
+
+    if (left.balance !== right.balance) {
+      return left.balance - right.balance;
+    }
+
+    return left.id.localeCompare(right.id);
+  });
+}
+
+function selectSafeFullPayoff(
+  debts: readonly NormalizedDebtProfile[],
+  state: PlannerState,
+  targetRunwayMonths: number,
+): NormalizedDebtProfile | null {
+  const eligible = debts.filter((debt) => {
+    if (debt.balance > state.cash) {
+      return false;
+    }
+
+    const nextBurn = Math.max(0, state.monthlyBurn - debt.minimum_payment);
+    const nextRunwayMonths = calculateWholeRunwayMonths(state.cash - debt.balance, nextBurn);
+    return nextRunwayMonths >= targetRunwayMonths;
+  });
+
+  if (eligible.length === 0) {
     return null;
   }
 
-  const paidDebtIds = new Set(paidDebts.map((debt) => debt.id));
-  const unpaidDebts = profile.debts.filter((debt) => !paidDebtIds.has(debt.id));
-  const relievedMinimums = paidDebts.reduce((sum, debt) => sum + debt.minimum_payment, 0);
-  const remainingCash = totalLiquidCash - upfrontDebtPayment;
-  const monthlyBurn = Math.max(
-    0,
-    profile.monthly_obligations.total_monthly_burn -
-      relievedMinimums -
-      profile.income_assumptions.expected_monthly_income,
-  );
-  const runwayMonths = monthlyBurn === 0 ? Number.POSITIVE_INFINITY : remainingCash / monthlyBurn;
-  const projectedInterestCarry = unpaidDebts.reduce((sum, debt) => sum + debt.balance * debt.apr, 0);
+  return eligible.sort((left, right) => {
+    if (left.minimum_payment !== right.minimum_payment) {
+      return right.minimum_payment - left.minimum_payment;
+    }
 
-  return {
-    paidDebtIds: [...paidDebtIds].sort(),
-    remainingCash,
-    monthlyBurn,
-    runwayMonths,
-    projectedInterestCarry,
-    protectsFloor: runwayMonths >= profile.planning_preferences.runway_floor_months,
-    unpaidDebts,
-  };
+    if (left.apr !== right.apr) {
+      return right.apr - left.apr;
+    }
+
+    if (left.balance !== right.balance) {
+      return left.balance - right.balance;
+    }
+
+    return left.id.localeCompare(right.id);
+  })[0]!;
 }
 
-function compareCandidates(left: CandidatePlan, right: CandidatePlan): number {
-  if (left.protectsFloor !== right.protectsFloor) {
-    return left.protectsFloor ? -1 : 1;
+function allocateExtraDebtPaydown(profile: NormalizedFinancialProfile): PlannerState {
+  const orderedDebts = sortDebtsForInterestPriority(profile.debts);
+  const state: PlannerState = {
+    cash: profile.cash_position.total_liquid_cash,
+    monthlyBurn: Math.max(
+      0,
+      profile.monthly_obligations.total_monthly_burn - profile.income_assumptions.expected_monthly_income,
+    ),
+    allocations: [],
+    remainingDebts: orderedDebts,
+  };
+
+  while (state.remainingDebts.length > 0) {
+    const currentWholeRunwayMonths = calculateWholeRunwayMonths(state.cash, state.monthlyBurn);
+
+    if (currentWholeRunwayMonths < profile.planning_preferences.runway_floor_months) {
+      break;
+    }
+
+    const safeFullPayoff = selectSafeFullPayoff(
+      state.remainingDebts,
+      state,
+      currentWholeRunwayMonths,
+    );
+
+    if (safeFullPayoff) {
+      state.cash -= safeFullPayoff.balance;
+      state.monthlyBurn = Math.max(0, state.monthlyBurn - safeFullPayoff.minimum_payment);
+      state.allocations.push({
+        debt: safeFullPayoff,
+        amount: safeFullPayoff.balance,
+        fullyPaid: true,
+      });
+      state.remainingDebts = state.remainingDebts.filter((debt) => debt.id !== safeFullPayoff.id);
+      continue;
+    }
+
+    const partialBudget =
+      currentWholeRunwayMonths === Number.POSITIVE_INFINITY
+        ? state.cash
+        : Math.max(0, state.cash - currentWholeRunwayMonths * state.monthlyBurn);
+
+    if (partialBudget <= 0) {
+      break;
+    }
+
+    const targetDebt = state.remainingDebts[0];
+    if (!targetDebt) {
+      break;
+    }
+
+    const payment = Math.min(partialBudget, targetDebt.balance);
+    if (payment <= 0) {
+      break;
+    }
+
+    state.cash -= payment;
+
+    if (payment >= targetDebt.balance) {
+      state.monthlyBurn = Math.max(0, state.monthlyBurn - targetDebt.minimum_payment);
+      state.allocations.push({
+        debt: targetDebt,
+        amount: targetDebt.balance,
+        fullyPaid: true,
+      });
+      state.remainingDebts = state.remainingDebts.slice(1);
+      continue;
+    }
+
+    state.allocations.push({
+      debt: targetDebt,
+      amount: payment,
+      fullyPaid: false,
+    });
+    state.remainingDebts = [
+      {
+        ...targetDebt,
+        balance: targetDebt.balance - payment,
+      },
+      ...state.remainingDebts.slice(1),
+    ];
+    break;
   }
 
-  if (left.runwayMonths !== right.runwayMonths) {
-    return right.runwayMonths - left.runwayMonths;
-  }
-
-  if (left.monthlyBurn !== right.monthlyBurn) {
-    return left.monthlyBurn - right.monthlyBurn;
-  }
-
-  if (left.projectedInterestCarry !== right.projectedInterestCarry) {
-    return left.projectedInterestCarry - right.projectedInterestCarry;
-  }
-
-  return left.paidDebtIds.join(",").localeCompare(right.paidDebtIds.join(","));
+  return state;
 }
 
 function buildImmediateActions(
   profile: NormalizedFinancialProfile,
-  candidate: CandidatePlan,
+  state: PlannerState,
 ): PlannerImmediateAction[] {
   const actions: PlannerImmediateAction[] = [
     {
       type: "reserve-cash",
-      summary: `Preserve at least ${profile.planning_preferences.runway_floor_months} months of runway before any optional debt paydown.`,
-      amount: profile.planning_preferences.runway_floor_months * candidate.monthlyBurn,
+      summary: `Preserve at least ${profile.planning_preferences.runway_floor_months} whole months of runway before optional debt paydown.`,
+      amount:
+        profile.planning_preferences.runway_floor_months === Number.POSITIVE_INFINITY
+          ? state.cash
+          : profile.planning_preferences.runway_floor_months * state.monthlyBurn,
     },
   ];
 
-  if (candidate.unpaidDebts.length > 0) {
+  const minimumPaymentTotal = state.remainingDebts.reduce((sum, debt) => sum + debt.minimum_payment, 0);
+  if (minimumPaymentTotal > 0) {
     actions.push({
       type: "pay-minimums",
       summary: "Cover all required debt minimums before considering optional extra payments.",
-      amount: candidate.unpaidDebts.reduce((sum, debt) => sum + debt.minimum_payment, 0),
+      amount: minimumPaymentTotal,
     });
   }
 
-  for (const debt of profile.debts.filter((entry) => candidate.paidDebtIds.includes(entry.id))) {
+  for (const allocation of state.allocations) {
     actions.push({
       type: "pay-extra-debt",
-      summary: `Fully pay ${debt.label} without breaching the configured runway floor.`,
-      amount: debt.balance,
+      summary: allocation.fullyPaid
+        ? `Fully pay ${allocation.debt.label} without reducing survivable whole-month runway.`
+        : `Apply surplus cash to ${allocation.debt.label} without reducing survivable whole-month runway.`,
+      amount: allocation.amount,
     });
   }
 
   return actions;
 }
 
-function buildMonthlyPlan(candidate: CandidatePlan): PlannerMonthlyPlanEntry[] {
-  const projectedMonths = Number.isFinite(candidate.runwayMonths)
-    ? Math.max(1, Math.min(12, Math.ceil(candidate.runwayMonths)))
-    : 12;
-  const debtPayments = candidate.unpaidDebts.map((debt) => ({
+function buildMonthlyPlan(state: PlannerState): PlannerMonthlyPlanEntry[] {
+  const wholeRunwayMonths = calculateWholeRunwayMonths(state.cash, state.monthlyBurn);
+  const projectedMonths =
+    wholeRunwayMonths === Number.POSITIVE_INFINITY ? 12 : Math.max(1, Math.min(12, wholeRunwayMonths + 1));
+  const debtPayments = state.remainingDebts.map((debt) => ({
     debt_id: debt.id,
     amount: debt.minimum_payment,
   }));
 
   const plan: PlannerMonthlyPlanEntry[] = [];
-  let currentCash = candidate.remainingCash;
+  let currentCash = state.cash;
 
   for (let month = 1; month <= projectedMonths; month += 1) {
-    const endingCash = Math.max(0, currentCash - candidate.monthlyBurn);
+    const endingCash = Math.max(0, currentCash - state.monthlyBurn);
     plan.push({
       month,
       starting_cash: currentCash,
@@ -142,9 +234,9 @@ function buildMonthlyPlan(candidate: CandidatePlan): PlannerMonthlyPlanEntry[] {
 
 function buildRiskFlags(
   profile: NormalizedFinancialProfile,
-  candidate: CandidatePlan,
+  runwayMonths: number,
 ): PlannerRiskFlag[] {
-  if (candidate.protectsFloor) {
+  if (runwayMonths >= profile.planning_preferences.runway_floor_months) {
     return [];
   }
 
@@ -157,31 +249,27 @@ function buildRiskFlags(
 }
 
 export function buildRunwayPlan(profile: NormalizedFinancialProfile): PlannerResult {
-  const candidates = generateDebtSubsets(profile.debts)
-    .map((subset) => evaluateCandidatePlan(profile, subset))
-    .filter((candidate): candidate is CandidatePlan => candidate !== null)
-    .sort(compareCandidates);
-
-  const bestCandidate = candidates[0] ?? evaluateCandidatePlan(profile, [])!;
-  const floorStatus = bestCandidate.protectsFloor ? "meets-floor" : "below-floor";
+  const state = allocateExtraDebtPaydown(profile);
+  const runwayMonths = calculateWholeRunwayMonths(state.cash, state.monthlyBurn);
+  const floorStatus = runwayMonths >= profile.planning_preferences.runway_floor_months ? "meets-floor" : "below-floor";
 
   return {
     snapshot: {
-      liquid_cash: bestCandidate.remainingCash,
-      monthly_burn: bestCandidate.monthlyBurn,
-      runway_months: bestCandidate.runwayMonths,
+      liquid_cash: state.cash,
+      monthly_burn: state.monthlyBurn,
+      runway_months: runwayMonths,
     },
-    recommended_immediate_actions: buildImmediateActions(profile, bestCandidate),
-    monthly_plan: buildMonthlyPlan(bestCandidate),
+    recommended_immediate_actions: buildImmediateActions(profile, state),
+    monthly_plan: buildMonthlyPlan(state),
     runway_estimate: {
-      months: bestCandidate.runwayMonths,
+      months: runwayMonths,
       floor_months: profile.planning_preferences.runway_floor_months,
       floor_status: floorStatus,
     },
     assumptions: [
       "No future income is assumed until it is confirmed.",
-      "Extra debt paydown is only recommended when the runway floor remains protected.",
+      "Extra debt paydown is only recommended when survivable whole-month runway does not drop.",
     ],
-    risk_flags: buildRiskFlags(profile, bestCandidate),
+    risk_flags: buildRiskFlags(profile, runwayMonths),
   };
 }

@@ -54,11 +54,6 @@ describe("runway planning engine", () => {
         type: "pay-minimums",
       }),
     );
-    expect(result.recommended_immediate_actions).not.toContainEqual(
-      expect.objectContaining({
-        type: "pay-extra-debt",
-      }),
-    );
     expect(result.snapshot.runway_months).toBeGreaterThan(6);
     expect(result.monthly_plan[0]).toMatchObject({
       month: 1,
@@ -67,14 +62,51 @@ describe("runway planning engine", () => {
     expect(result.risk_flags).toEqual([]);
   });
 
+  it("uses surplus cash for partial high-apr paydown when it does not reduce survivable whole months", () => {
+    const result = buildRunwayPlan(
+      createProfile({
+        cash_position: {
+          available_cash: 14500,
+          reserved_cash: 2500,
+          severance_total: 12000,
+          total_liquid_cash: 29000,
+        },
+        monthly_obligations: {
+          essentials: 3000,
+          discretionary: 400,
+          debt_minimums: 200,
+          total_monthly_burn: 3600,
+        },
+        debts: [
+          {
+            id: "card-a",
+            label: "Card A",
+            balance: 5000,
+            apr: 0.2999,
+            minimum_payment: 200,
+          },
+        ],
+      }),
+    );
+
+    expect(result.snapshot.runway_months).toBe(8);
+    expect(result.recommended_immediate_actions).toContainEqual(
+      expect.objectContaining({
+        type: "pay-extra-debt",
+        amount: 200,
+      }),
+    );
+    expect(result.monthly_plan[0]?.debt_payments).toEqual([{ debt_id: "card-a", amount: 200 }]);
+  });
+
   it("rejects extra debt payoff candidates that would breach the runway floor", () => {
     const result = buildRunwayPlan(
       createProfile({
         cash_position: {
-          available_cash: 9000,
+          available_cash: 7400,
           reserved_cash: 2000,
           severance_total: 8000,
-          total_liquid_cash: 19000,
+          total_liquid_cash: 17400,
         },
         monthly_obligations: {
           essentials: 2500,
@@ -101,7 +133,7 @@ describe("runway planning engine", () => {
       }),
     );
     expect(result.assumptions).toContain(
-      "Extra debt paydown is only recommended when the runway floor remains protected.",
+      "Extra debt paydown is only recommended when survivable whole-month runway does not drop.",
     );
   });
 
@@ -109,6 +141,56 @@ describe("runway planning engine", () => {
     const profile = createProfile();
 
     expect(buildRunwayPlan(profile)).toEqual(buildRunwayPlan(profile));
+  });
+
+  it("handles larger debt lists without changing the deterministic recommendation contract", () => {
+    const debts = Array.from({ length: 12 }, (_, index) => ({
+      id: `card-${index + 1}`,
+      label: `Card ${index + 1}`,
+      balance: 800 + index * 150,
+      apr: 0.12 + index * 0.01,
+      minimum_payment: 40 + index * 5,
+    }));
+
+    const result = buildRunwayPlan(
+      createProfile({
+        cash_position: {
+          available_cash: 28000,
+          reserved_cash: 3000,
+          severance_total: 15000,
+          total_liquid_cash: 46000,
+        },
+        monthly_obligations: {
+          essentials: 2600,
+          discretionary: 250,
+          debt_minimums: debts.reduce((sum, debt) => sum + debt.minimum_payment, 0),
+          total_monthly_burn: 2600 + 250 + debts.reduce((sum, debt) => sum + debt.minimum_payment, 0),
+        },
+        debts,
+      }),
+    );
+
+    expect(result.runway_estimate.floor_status).toBe("meets-floor");
+    expect(result.recommended_immediate_actions[0]).toMatchObject({
+      type: "reserve-cash",
+    });
+    expect(result).toEqual(buildRunwayPlan(
+      createProfile({
+        cash_position: {
+          available_cash: 28000,
+          reserved_cash: 3000,
+          severance_total: 15000,
+          total_liquid_cash: 46000,
+        },
+        monthly_obligations: {
+          essentials: 2600,
+          discretionary: 250,
+          debt_minimums: debts.reduce((sum, debt) => sum + debt.minimum_payment, 0),
+          total_monthly_burn: 2600 + 250 + debts.reduce((sum, debt) => sum + debt.minimum_payment, 0),
+        },
+        debts,
+      }),
+    ));
   });
 
   it("surfaces structurally unsafe runway situations with explicit warnings", () => {
