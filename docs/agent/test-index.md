@@ -14,17 +14,35 @@ This file is generated from the harness registry.
 ## cli and harness logic
 
 - Path prefixes:
-- `src/runway/harness`
+- `src/runway/harness/app-registry.ts`
+- `src/runway/harness/audit.ts`
+- `src/runway/harness/behavior.ts`
+- `src/runway/harness/check.ts`
+- `src/runway/harness/command-runner.ts`
+- `src/runway/harness/generate.ts`
+- `src/runway/harness/inferential-review.ts`
+- `src/runway/harness/janitor.ts`
+- `src/runway/harness/review.ts`
+- `src/runway/harness/runtime-trends.ts`
+- `src/runway/harness/scorecard.ts`
+- `src/runway/harness/types.ts`
 - Commands:
 - `npm run typecheck`
 - `npm run test`
 - `npm run harness:generate`
 - `npm run harness:check`
 
+## harness workflow
+
+- Path prefixes:
+- `.github/workflows/harness.yml`
+- Commands:
+- `npm run ci:harness`
+
 ## scenario inventory
 
 - Path prefixes:
-- `src/runway/scenarios`
+- `src/runway/scenarios/inventory.ts`
 - Commands:
 - `npm run typecheck`
 - `npm run test`

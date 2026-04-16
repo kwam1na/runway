@@ -12,6 +12,7 @@
     "test": "vitest run",
     "harness:generate": "tsx src/runway/cli.ts generate",
     "harness:check": "tsx src/runway/cli.ts check",
+    "ci:harness": "npm run typecheck && npm run test && npm run harness:generate && npm run harness:check && npm run harness:behavior && npm run harness:audit -- src/runway/cli.ts && npm run harness:inferential-review && npm run harness:scorecard",
     "harness:review": "tsx src/runway/cli.ts review",
     "harness:audit": "tsx src/runway/cli.ts audit",
     "harness:behavior": "tsx src/runway/cli.ts behavior",
@@ -20,7 +21,7 @@
     "harness:scorecard": "tsx src/runway/cli.ts scorecard",
     "harness:janitor": "tsx src/runway/cli.ts janitor",
     "harness:test": "vitest run tests/harness",
-    "validate:pr": "npm run typecheck && npm run test && npm run harness:check && npm run harness:audit && npm run harness:inferential-review && npm run harness:scorecard"
+    "validate:pr": "npm run typecheck && npm run test && npm run harness:check && npm run harness:behavior && npm run harness:audit && npm run harness:inferential-review && npm run harness:scorecard"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

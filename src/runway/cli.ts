@@ -5,9 +5,14 @@ export type CliResult = {
 };
 
 import { runHarnessAudit } from "./harness/audit.js";
+import { runBehaviorScenarios } from "./harness/behavior.js";
 import { runHarnessCheck } from "./harness/check.js";
 import { generateHarnessArtifacts } from "./harness/generate.js";
+import { runInferentialReview } from "./harness/inferential-review.js";
+import { runJanitor } from "./harness/janitor.js";
 import { selectValidationsForFiles } from "./harness/review.js";
+import { buildRuntimeTrends } from "./harness/runtime-trends.js";
+import { buildScorecard } from "./harness/scorecard.js";
 
 const supportedCommands = [
   "generate",
@@ -95,6 +100,40 @@ export async function runCli(args: string[]): Promise<CliResult> {
           stdout: "",
           stderr: result.errors.join("\n"),
         };
+  }
+
+  if (command === "behavior") {
+    const result = await runBehaviorScenarios();
+    return jsonResult(command, result);
+  }
+
+  if (command === "runtime-trends") {
+    return {
+      exitCode: 0,
+      stdout: await buildRuntimeTrends(),
+      stderr: "",
+    };
+  }
+
+  if (command === "scorecard") {
+    return {
+      exitCode: 0,
+      stdout: await buildScorecard(),
+      stderr: "",
+    };
+  }
+
+  if (command === "inferential-review") {
+    return {
+      exitCode: 0,
+      stdout: await runInferentialReview(),
+      stderr: "",
+    };
+  }
+
+  if (command === "janitor") {
+    const result = await runJanitor();
+    return jsonResult(command, result);
   }
 
   return {

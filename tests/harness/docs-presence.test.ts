@@ -49,6 +49,7 @@ describe("agent docs", () => {
     expect(readme).toContain("Harness Commands");
     expect(readme).toContain("npm run harness:generate");
     expect(readme).toContain("npm run harness:check");
+    expect(readme).toContain("npm run harness:behavior");
     expect(readme).toContain("npm run harness:review");
     expect(readme).toContain("npm run harness:audit");
     expect(readme).toContain("npm run validate:pr");
