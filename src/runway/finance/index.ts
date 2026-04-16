@@ -1,6 +1,7 @@
 export {
   createEmptyPlannerResult,
   normalizeFinancialProfile,
+  normalizePlannerResult,
 } from "./contracts.js";
 export type {
   DebtProfileInput,
@@ -9,8 +10,13 @@ export type {
   NormalizedDebtProfile,
   NormalizedFinancialProfile,
   PlannerImmediateAction,
+  PlannerImmediateActionInput,
   PlannerMonthlyPlanEntry,
+  PlannerMonthlyPlanEntryInput,
+  PlannerResultInput,
+  PlannerResultNormalizationResult,
   PlannerResult,
   PlannerRiskFlag,
+  PlannerRiskFlagInput,
   ValidationIssue,
 } from "./contracts.js";
