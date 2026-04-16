@@ -10,6 +10,9 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
+    "prepare": "husky",
+    "validate:commit": "npm run typecheck && npm test && npm run harness:check",
+    "validate:push": "npm run validate:pr",
     "harness:generate": "tsx src/runway/cli.ts generate",
     "harness:check": "tsx src/runway/cli.ts check",
     "ci:harness": "npm run typecheck && npm run test && npm run harness:generate && npm run harness:check && npm run harness:behavior && npm run harness:audit -- src/runway/cli.ts && npm run harness:inferential-review && npm run harness:scorecard",
@@ -25,6 +28,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "husky": "^9.1.7",
     "tsx": "^4.19.0",
     "typescript": "^5.8.0",
     "vitest": "^3.2.0"
