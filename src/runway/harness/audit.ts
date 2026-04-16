@@ -88,6 +88,18 @@ export async function runHarnessAudit(options: AuditOptions = {}): Promise<Harne
     }
   }
 
+  for (const prefix of coveredPrefixes) {
+    if (candidateFiles.some((file) => matchesPrefix(file, prefix))) {
+      continue;
+    }
+
+    try {
+      await access(prefix);
+    } catch {
+      errors.add(`Missing validation surface path: ${prefix}`);
+    }
+  }
+
   for (const target of harnessTargets) {
     for (const path of target.requiredDocs) {
       if (![...coveredPrefixes].some((prefix) => matchesPrefix(path, prefix))) {

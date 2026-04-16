@@ -32,7 +32,15 @@ export const harnessTargets = [
       },
       {
         name: "cli and harness logic",
-        pathPrefixes: ["src/runway/harness"],
+        pathPrefixes: [
+          "src/runway/harness/app-registry.ts",
+          "src/runway/harness/audit.ts",
+          "src/runway/harness/check.ts",
+          "src/runway/harness/command-runner.ts",
+          "src/runway/harness/generate.ts",
+          "src/runway/harness/review.ts",
+          "src/runway/harness/types.ts",
+        ],
         commands: [
           { kind: "npm", script: "typecheck" },
           { kind: "npm", script: "test" },
@@ -43,7 +51,7 @@ export const harnessTargets = [
       },
       {
         name: "scenario inventory",
-        pathPrefixes: ["src/runway/scenarios"],
+        pathPrefixes: ["src/runway/scenarios/inventory.ts"],
         commands: [
           { kind: "npm", script: "typecheck" },
           { kind: "npm", script: "test" },

@@ -214,4 +214,15 @@ describe("harness command behavior", () => {
       }
     });
   });
+
+  it("fails audit when a declared covered file is deleted", async () => {
+    await inWorkspace(async (workspace) => {
+      rmSync(resolve(workspace, "src/runway/harness/review.ts"));
+
+      const result = await runCli(["audit"]);
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain("src/runway/harness/review.ts");
+      expect(result.stderr).toContain("Missing validation surface path");
+    });
+  });
 });
