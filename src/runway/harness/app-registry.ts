@@ -55,6 +55,15 @@ export const harnessTargets = [
         behaviorScenarios: [],
       },
       {
+        name: "finance domain logic",
+        pathPrefixes: ["src/runway/finance"],
+        commands: [
+          { kind: "npm", script: "typecheck" },
+          { kind: "npm", script: "test" },
+        ],
+        behaviorScenarios: [],
+      },
+      {
         name: "harness workflow",
         pathPrefixes: [".github/workflows/harness.yml"],
         commands: [{ kind: "npm", script: "ci:harness" }],
