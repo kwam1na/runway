@@ -13,8 +13,10 @@ import { runJanitor } from "./harness/janitor.js";
 import { selectValidationsForFiles } from "./harness/review.js";
 import { buildRuntimeTrends } from "./harness/runtime-trends.js";
 import { buildScorecard } from "./harness/scorecard.js";
+import { analyzeProfileFile } from "./finance/analysis-runner.js";
 
 const supportedCommands = [
+  "analyze",
   "generate",
   "check",
   "review",
@@ -57,6 +59,46 @@ export async function runCli(args: string[]): Promise<CliResult> {
   if (command === "generate") {
     const outputs = await generateHarnessArtifacts();
     return jsonResult(command, { outputs });
+  }
+
+  if (command === "analyze") {
+    const profilePath = args[1];
+
+    if (!profilePath) {
+      return {
+        exitCode: 1,
+        stdout: "",
+        stderr: "Usage: analyze <profile-path>",
+      };
+    }
+
+    try {
+      const outcome = await analyzeProfileFile(profilePath);
+
+      if (!outcome.ok) {
+        return {
+          exitCode: 1,
+          stdout: "",
+          stderr: outcome.errors
+            .map((error) =>
+              [error.path, error.message, error.question].filter(Boolean).join(": "),
+            )
+            .join("\n"),
+        };
+      }
+
+      return jsonResult(command, {
+        profilePath,
+        result: outcome.result,
+        report: outcome.report,
+      });
+    } catch (error) {
+      return {
+        exitCode: 1,
+        stdout: "",
+        stderr: error instanceof Error ? error.message : String(error),
+      };
+    }
   }
 
   if (command === "check") {
