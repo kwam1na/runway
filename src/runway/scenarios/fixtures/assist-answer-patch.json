@@ -1,0 +1,9 @@
+{
+  "debts": [
+    {
+      "id": "card-a",
+      "apr": 0.2399,
+      "minimum_payment": 220
+    }
+  ]
+}

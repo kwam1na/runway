@@ -29,7 +29,16 @@ export const harnessTargets = [
           { kind: "npm", script: "typecheck" },
           { kind: "npm", script: "test" },
         ],
-        behaviorScenarios: ["cli-runway-smoke"],
+        behaviorScenarios: ["cli-runway-smoke", "cli-runway-assist"],
+      },
+      {
+        name: "agent workflow logic",
+        pathPrefixes: ["src/runway/agents"],
+        commands: [
+          { kind: "npm", script: "typecheck" },
+          { kind: "npm", script: "test" },
+        ],
+        behaviorScenarios: ["cli-runway-assist"],
       },
       {
         name: "cli and harness logic",
@@ -72,14 +81,14 @@ export const harnessTargets = [
       },
       {
         name: "scenario inventory",
-        pathPrefixes: ["src/runway/scenarios/inventory.ts"],
+        pathPrefixes: ["src/runway/scenarios"],
         commands: [
           { kind: "npm", script: "typecheck" },
           { kind: "npm", script: "test" },
           { kind: "npm", script: "harness:generate" },
           { kind: "npm", script: "harness:check" },
         ],
-        behaviorScenarios: ["cli-runway-smoke"],
+        behaviorScenarios: ["cli-runway-smoke", "cli-runway-assist"],
       },
       {
         name: "manual docs",

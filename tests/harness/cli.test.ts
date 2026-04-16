@@ -5,6 +5,7 @@ describe("runway cli", () => {
   it("lists supported harness commands", async () => {
     const result = await runCli(["help"]);
     expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain("assist");
     expect(result.stdout).toContain("generate");
     expect(result.stdout).toContain("audit");
     expect(result.stdout).toContain("scorecard");

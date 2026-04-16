@@ -1,9 +1,12 @@
+import { readFile } from "node:fs/promises";
+
 export type CliResult = {
   exitCode: number;
   stdout: string;
   stderr: string;
 };
 
+import { runAgentWorkflow } from "./agents/index.js";
 import { runHarnessAudit } from "./harness/audit.js";
 import { runBehaviorScenarios } from "./harness/behavior.js";
 import { runHarnessCheck } from "./harness/check.js";
@@ -17,6 +20,7 @@ import { analyzeProfileFile } from "./finance/analysis-runner.js";
 
 const supportedCommands = [
   "analyze",
+  "assist",
   "generate",
   "check",
   "review",
@@ -35,6 +39,25 @@ function jsonResult(command: string, payload: Record<string, unknown>, exitCode 
     stdout: JSON.stringify({ command, ...payload }),
     stderr: "",
   };
+}
+
+async function readJsonFile<T>(path: string, invalidMessage: string): Promise<{ ok: true; payload: T } | {
+  ok: false;
+  error: string;
+}> {
+  const raw = await readFile(path, "utf8");
+
+  try {
+    return {
+      ok: true,
+      payload: JSON.parse(raw) as T,
+    };
+  } catch {
+    return {
+      ok: false,
+      error: invalidMessage,
+    };
+  }
 }
 
 export async function runCli(args: string[]): Promise<CliResult> {
@@ -92,6 +115,76 @@ export async function runCli(args: string[]): Promise<CliResult> {
         result: outcome.result,
         report: outcome.report,
       });
+    } catch (error) {
+      return {
+        exitCode: 1,
+        stdout: "",
+        stderr: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
+
+  if (command === "assist") {
+    const profilePath = args[1];
+    const patchPath = args[2];
+
+    if (!profilePath) {
+      return {
+        exitCode: 1,
+        stdout: "",
+        stderr: "Usage: assist <profile-path> [answer-patch-path]",
+      };
+    }
+
+    try {
+      const profilePayload = await readJsonFile<Record<string, unknown>>(
+        profilePath,
+        "Profile file must contain valid JSON.",
+      );
+      if (!profilePayload.ok) {
+        return {
+          exitCode: 1,
+          stdout: "",
+          stderr: profilePayload.error,
+        };
+      }
+
+      const patchPayload = patchPath
+        ? await readJsonFile<Record<string, unknown>>(patchPath, "Answer patch file must contain valid JSON.")
+        : undefined;
+      if (patchPayload && !patchPayload.ok) {
+        return {
+          exitCode: 1,
+          stdout: "",
+          stderr: patchPayload.error,
+        };
+      }
+
+      const outcome = runAgentWorkflow(
+        profilePayload.payload,
+        patchPayload && patchPayload.ok ? patchPayload.payload : undefined,
+      );
+
+      return outcome.status === "needs-input"
+        ? jsonResult(command, {
+            status: outcome.status,
+            profilePath,
+            patchPath,
+            profile: outcome.profile,
+            validationIssues: outcome.validationIssues,
+            followUpQuestions: outcome.followUpQuestions.map((issue) => ({
+              path: issue.path,
+              question: issue.question,
+            })),
+          })
+        : jsonResult(command, {
+            status: outcome.status,
+            profilePath,
+            patchPath,
+            profile: outcome.profile,
+            result: outcome.result,
+            report: outcome.report,
+          });
     } catch (error) {
       return {
         exitCode: 1,

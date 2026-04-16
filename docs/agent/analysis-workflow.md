@@ -12,12 +12,12 @@
 Use the shared finance contract and runner for every agent integration so that intake, validation, analysis, and explanation stay consistent across wrappers.
 
 1. Gather user inputs into a `LocalFinancialProfileInput` payload that preserves the shared field names.
-2. Keep the confirmed profile in local-only storage such as a JSON file on disk.
-3. Run validation through `normalizeFinancialProfile` or call `analyzeProfilePayload` directly.
+2. Keep the working profile in local-only storage such as a JSON file on disk.
+3. Run the minimal agent loop through `runAgentWorkflow` or `assist <profile-path> [answer-patch-path]`.
 4. If validation fails, surface each `ValidationIssue` back to the user with its `path`, `message`, and optional `question`.
-5. Only rerun analysis after the user confirms the missing or corrected values.
-6. Execute the local runner with `analyze <profile-path>` or `analyzeProfilePayload`.
-7. Explain the result using the shared `report` and `result` output instead of restating calculation rules inside the wrapper.
+5. Save only the user-confirmed corrections into a local answer patch and rerun the same workflow.
+6. When the workflow reaches `ready`, present the shared `report` and `result` output instead of restating calculation rules inside the wrapper.
+7. Keep any extra agent-specific phrasing outside the planning logic.
 
 Happy path:
 
@@ -62,6 +62,19 @@ tsx src/runway/cli.ts analyze <profile-path>
 
 The runner returns structured JSON with a `result` payload plus a Markdown `report`. The wrapper should present those outputs, summarize the most important next steps, and keep any extra agent-specific language outside the planning logic.
 
+Minimal local agent loop:
+
+```bash
+tsx src/runway/cli.ts assist <profile-path> [answer-patch-path]
+```
+
+The `assist` command loads the current local profile, optionally merges a local answer patch, and returns one of two deterministic states:
+
+- `needs-input`: includes `validationIssues` plus `followUpQuestions` for the exact missing answers to ask next.
+- `ready`: includes the merged profile, shared `result`, and shared Markdown `report`.
+
+If a wrapper needs to bypass the higher-level loop, the lower-level shared finance entry points `analyzeProfilePayload` and `buildRunwayPlan` remain available behind the agent workflow layer.
+
 Incomplete intake path:
 
 ```text
@@ -88,13 +101,13 @@ Preferred wrapper path:
 
 ```ts
 import {
-  analyzeProfilePayload,
-  type AnalysisOutcome,
+  runAgentWorkflow,
+  type AgentWorkflowOutcome,
   type LocalFinancialProfileInput,
-} from "../finance/index.js";
+} from "../agents/index.js";
 
-export function runAgentAnalysis(payload: LocalFinancialProfileInput): AnalysisOutcome {
-  return analyzeProfilePayload(payload);
+export function runAgentAnalysis(payload: LocalFinancialProfileInput): AgentWorkflowOutcome {
+  return runAgentWorkflow(payload);
 }
 ```
 
@@ -102,21 +115,17 @@ Lower-level integration path when the wrapper needs separate validation and exec
 
 ```ts
 import {
-  buildRunwayPlan,
-  normalizeFinancialProfile,
+  mergeFinancialProfilePatch,
+  runAgentWorkflow,
   type LocalFinancialProfileInput,
-} from "../finance/index.js";
+} from "../agents/index.js";
 
-export function runValidatedAgentAnalysis(payload: LocalFinancialProfileInput) {
-  const normalized = normalizeFinancialProfile(payload);
-  if (!normalized.ok) {
-    return normalized;
-  }
-
-  return {
-    ok: true,
-    result: buildRunwayPlan(normalized.profile),
-  };
+export function runValidatedAgentAnalysis(
+  payload: LocalFinancialProfileInput,
+  answerPatch?: LocalFinancialProfileInput,
+) {
+  const mergedPayload = mergeFinancialProfilePatch(payload, answerPatch);
+  return runAgentWorkflow(mergedPayload);
 }
 ```
 

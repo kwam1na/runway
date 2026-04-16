@@ -21,6 +21,7 @@ describe("agent docs", () => {
     expect(existsSync(resolve(root, "src/runway/index.ts"))).toBe(true);
     expect(existsSync(resolve(root, "docs/agent"))).toBe(true);
     expect(existsSync(resolve(root, "docs/agent/analysis-workflow.md"))).toBe(true);
+    expect(existsSync(resolve(root, "src/runway/agents"))).toBe(true);
     expect(existsSync(resolve(root, "src/runway/harness/app-registry.ts"))).toBe(true);
     expect(existsSync(resolve(root, "src/runway/scenarios/inventory.ts"))).toBe(true);
     expect(existsSync(resolve(root, "graphify-out"))).toBe(true);
@@ -37,6 +38,7 @@ describe("agent docs", () => {
     const helpResult = await runCli(["help"]);
 
     expect(helpResult.exitCode).toBe(0);
+    expect(helpResult.stdout).toContain("assist");
     expect(helpResult.stdout).toContain("generate");
     expect(helpResult.stdout).toContain("check");
     expect(helpResult.stdout).toContain("review");
@@ -74,6 +76,8 @@ describe("agent docs", () => {
     expect(index).toContain("src/runway/cli.ts");
     expect(index).toContain("docs/agent/analysis-workflow.md");
     expect(index).toContain("analyze");
+    expect(index).toContain("assist");
+    expect(index).toContain("src/runway/agents");
     expect(index).toContain("src/runway/harness/app-registry.ts");
     expect(index).toContain("src/runway/scenarios/inventory.ts");
     expect(index).toContain("npm run harness:check");
@@ -84,6 +88,9 @@ describe("agent docs", () => {
     expect(analysisWorkflow).toContain("## Thin Wrapper Pattern");
     expect(analysisWorkflow).toContain("## Boundaries");
     expect(analysisWorkflow).toContain("analyze <profile-path>");
+    expect(analysisWorkflow).toContain("assist <profile-path> [answer-patch-path]");
+    expect(analysisWorkflow).toContain("runAgentWorkflow");
+    expect(analysisWorkflow).toContain("mergeFinancialProfilePatch");
     expect(analysisWorkflow).toContain("LocalFinancialProfileInput");
     expect(analysisWorkflow).toContain("normalizeFinancialProfile");
     expect(analysisWorkflow).toContain("analyzeProfilePayload");
@@ -120,6 +127,7 @@ describe("agent docs", () => {
     expect(codeMap).toContain("src/runway/harness/");
     expect(codeMap).toContain("src/runway/scenarios/");
     expect(codeMap).toContain("src/runway/agents/");
+    expect(codeMap).toContain("implemented minimal agent loop");
     expect(codeMap).toContain("src/runway/finance/");
     expect(codeMap).toContain("docs/agent/analysis-workflow.md");
     expect(codeMap).toContain("graphify-out/");
