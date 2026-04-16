@@ -311,6 +311,23 @@ describe("financial profile contracts", () => {
     ]);
   });
 
+  it("returns a root-level validation error for malformed profile payloads", () => {
+    const result = normalizeFinancialProfile(null as unknown as never);
+
+    expect(result.ok).toBe(false);
+
+    if (result.ok) {
+      throw new Error("expected malformed profile root validation failure");
+    }
+
+    expect(result.errors).toEqual([
+      {
+        path: "$",
+        message: "Financial profile payload must be an object.",
+      },
+    ]);
+  });
+
   it("defines a planner result shape with explicit defaults for downstream tickets", () => {
     const result = createEmptyPlannerResult();
 
@@ -529,6 +546,23 @@ describe("financial profile contracts", () => {
       {
         path: "monthly_plan[0].debt_payments",
         message: "Monthly debt payments must be provided as an array.",
+      },
+    ]);
+  });
+
+  it("returns a root-level validation error for malformed planner-result payloads", () => {
+    const result = normalizePlannerResult(null as unknown as never);
+
+    expect(result.ok).toBe(false);
+
+    if (result.ok) {
+      throw new Error("expected malformed planner-result root validation failure");
+    }
+
+    expect(result.errors).toEqual([
+      {
+        path: "$",
+        message: "Planner result payload must be an object.",
       },
     ]);
   });

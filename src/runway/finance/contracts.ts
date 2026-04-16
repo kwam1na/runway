@@ -187,6 +187,10 @@ function isFiniteNumber(value: number | undefined): value is number {
   return value !== undefined && Number.isFinite(value);
 }
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 function readNonNegativeNumber(
   value: number | undefined,
   path: string,
@@ -401,6 +405,18 @@ function normalizeDebt(
 export function normalizeFinancialProfile(
   input: LocalFinancialProfileInput,
 ): FinancialProfileNormalizationResult {
+  if (!isPlainObject(input)) {
+    return {
+      ok: false,
+      errors: [
+        {
+          path: "$",
+          message: "Financial profile payload must be an object.",
+        },
+      ],
+    };
+  }
+
   const errors: ValidationIssue[] = [];
   const cashPosition = input.cash_position ?? {};
   const monthlyObligations = input.monthly_obligations ?? {};
@@ -604,6 +620,18 @@ export function createEmptyPlannerResult(): PlannerResult {
 export function normalizePlannerResult(
   input: PlannerResultInput,
 ): PlannerResultNormalizationResult {
+  if (!isPlainObject(input)) {
+    return {
+      ok: false,
+      errors: [
+        {
+          path: "$",
+          message: "Planner result payload must be an object.",
+        },
+      ],
+    };
+  }
+
   const errors: ValidationIssue[] = [];
   const snapshot = input.snapshot ?? {};
   const runwayEstimate = input.runway_estimate ?? {};
