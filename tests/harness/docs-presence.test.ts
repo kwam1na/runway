@@ -79,6 +79,8 @@ describe("agent docs", () => {
     expect(index).toContain("analyze");
     expect(index).toContain("assist");
     expect(index).toContain("interactive TTY");
+    expect(index).toContain("statement-first");
+    expect(index).toContain("additional manual debts");
     expect(index).toContain("src/runway/agents");
     expect(index).toContain("src/runway/harness/app-registry.ts");
     expect(index).toContain("src/runway/scenarios/inventory.ts");
@@ -93,6 +95,8 @@ describe("agent docs", () => {
     expect(analysisWorkflow).toContain("assist [profile-path] [answer-patch-path]");
     expect(analysisWorkflow).toContain("runway-profile.json");
     expect(analysisWorkflow).toContain("Interactive TTY mode");
+    expect(analysisWorkflow).toContain("missing profile plus `--statements`");
+    expect(analysisWorkflow).toContain("additional manual debts");
     expect(analysisWorkflow).toContain("<profile-path>.bak");
     expect(analysisWorkflow).toContain("runAgentWorkflow");
     expect(analysisWorkflow).toContain("mergeFinancialProfilePatch");

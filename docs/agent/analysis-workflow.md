@@ -83,6 +83,7 @@ When `--statements <file> ...` is supplied in the interactive flow, `assist` fir
 - PDFs without an embedded text layer fall back to local OCR after local PDF rasterization.
 - Extracted balances, minimum payments, labels, and APR candidates are shown back to the user for confirm, edit, or skip review before any debt values are written into the profile.
 - Multiple APR candidates require an explicit user choice before the planning `apr` field is set.
+- In a missing profile plus `--statements` session, `assist` now creates a minimal local shell first, runs statement review before any manual debt bootstrap questions, and then continues with only the remaining required non-debt fields plus any additional manual debts the user still wants to add.
 
 The non-interactive mode returns one of two deterministic states:
 
@@ -92,6 +93,8 @@ The non-interactive mode returns one of two deterministic states:
 The interactive mode keeps the profile JSON file as the live session state:
 
 - When statement files are provided, reviewed debt values are merged into `debts[]` before validator-driven follow-up questions continue.
+- In the statement-first path, uploaded statements seed the initial debt set before the user is asked for any extra manual debts.
+- If the uploaded statements do not cover the full debt set, the interactive loop asks only for additional manual debts after review rather than restarting full debt-count intake for the confirmed statement debts.
 - Accepted numeric answers currently cover debt APR and debt minimum-payment follow-ups.
 - Accepted boolean answers currently cover `income_assumptions.income_is_confirmed`.
 - Invalid numeric or boolean answers reprompt without mutating the file.
