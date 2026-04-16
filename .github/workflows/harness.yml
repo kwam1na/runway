@@ -16,7 +16,9 @@ jobs:
         with:
           node-version: 20
 
-      - run: npm install
+      # The committed lockfile was generated on macOS and currently omits
+      # Rollup's Linux native optional package entry, which breaks Ubuntu CI.
+      - run: npm install --package-lock=false
       - run: npm run typecheck
       - run: npm run test
       - run: npm run harness:generate

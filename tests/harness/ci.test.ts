@@ -13,6 +13,7 @@ describe("ci workflow", () => {
 
     expect(workflow).toContain("actions/checkout@v4");
     expect(workflow).toContain("actions/setup-node@v4");
+    expect(workflow).toContain("npm install --package-lock=false");
     expect(workflow).toContain("npm run typecheck");
     expect(workflow).toContain("npm run test");
     expect(workflow).toContain("npm run harness:generate");
