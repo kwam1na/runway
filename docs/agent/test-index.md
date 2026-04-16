@@ -32,6 +32,13 @@ This file is generated from the harness registry.
 - `npm run harness:generate`
 - `npm run harness:check`
 
+## harness workflow
+
+- Path prefixes:
+- `.github/workflows/harness.yml`
+- Commands:
+- `npm run ci:harness`
+
 ## scenario inventory
 
 - Path prefixes:

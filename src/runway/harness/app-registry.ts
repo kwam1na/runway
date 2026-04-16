@@ -55,6 +55,12 @@ export const harnessTargets = [
         behaviorScenarios: [],
       },
       {
+        name: "harness workflow",
+        pathPrefixes: [".github/workflows/harness.yml"],
+        commands: [{ kind: "npm", script: "ci:harness" }],
+        behaviorScenarios: [],
+      },
+      {
         name: "scenario inventory",
         pathPrefixes: ["src/runway/scenarios/inventory.ts"],
         commands: [

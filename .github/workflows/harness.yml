@@ -1,0 +1,35 @@
+name: Harness
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  harness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run test
+      - run: npm run harness:generate
+      - run: npm run harness:check
+      - run: npm run harness:audit -- src/runway/cli.ts
+      - run: npm run harness:inferential-review
+      - run: npm run harness:scorecard
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: runway-harness-artifacts
+          path: |
+            artifacts
+            docs/agent
+            graphify-out

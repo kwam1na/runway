@@ -36,6 +36,15 @@ This file is generated from the harness registry.
 - Behavior scenarios:
 - none
 
+## harness workflow
+
+- Path prefixes:
+- `.github/workflows/harness.yml`
+- Commands:
+- `npm run ci:harness`
+- Behavior scenarios:
+- none
+
 ## scenario inventory
 
 - Path prefixes:
