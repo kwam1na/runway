@@ -3,6 +3,7 @@ export {
   normalizeFinancialProfile,
   normalizePlannerResult,
 } from "./contracts.js";
+export { buildRunwayPlan } from "./planning-engine.js";
 export type {
   DebtProfileInput,
   FinancialProfileNormalizationResult,
