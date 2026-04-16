@@ -298,6 +298,24 @@ function readOptionalBoolean(
   return value;
 }
 
+function readOptionalObject<T extends Record<string, unknown>>(
+  value: T | undefined,
+  path: string,
+  message: string,
+  errors: ValidationIssue[],
+): T | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (!isPlainObject(value)) {
+    errors.push({ path, message });
+    return undefined;
+  }
+
+  return value;
+}
+
 function normalizeStringArray(
   value: string[] | undefined,
   path: string,
@@ -418,11 +436,37 @@ export function normalizeFinancialProfile(
   }
 
   const errors: ValidationIssue[] = [];
-  const cashPosition = input.cash_position ?? {};
-  const monthlyObligations = input.monthly_obligations ?? {};
+  const cashPosition =
+    readOptionalObject(
+      input.cash_position,
+      "cash_position",
+      "Cash position must be an object when provided.",
+      errors,
+    ) ?? {};
+  const monthlyObligations =
+    readOptionalObject(
+      input.monthly_obligations,
+      "monthly_obligations",
+      "Monthly obligations must be an object when provided.",
+      errors,
+    ) ?? {};
+  const incomeAssumptions =
+    readOptionalObject(
+      input.income_assumptions,
+      "income_assumptions",
+      "Income assumptions must be an object when provided.",
+      errors,
+    ) ?? {};
+  const planningPreferences =
+    readOptionalObject(
+      input.planning_preferences,
+      "planning_preferences",
+      "Planning preferences must be an object when provided.",
+      errors,
+    ) ?? {};
   const debts = readArray(input.debts, "debts", "Debts must be provided as an array.", errors);
   const normalizedNotes = normalizeStringArray(
-    input.income_assumptions?.notes,
+    incomeAssumptions.notes as string[] | undefined,
     "income_assumptions.notes",
     "Income assumption notes must be provided as an array of strings.",
     "Income assumption notes must be non-empty strings.",
@@ -430,23 +474,20 @@ export function normalizeFinancialProfile(
   );
   const incomeIsConfirmed =
     readOptionalBoolean(
-      input.income_assumptions?.income_is_confirmed,
+      incomeAssumptions.income_is_confirmed as boolean | undefined,
       "income_assumptions.income_is_confirmed",
       "Income confirmation must be a boolean.",
       errors,
     ) ?? false;
   const prioritizeInterestSavings =
     readOptionalBoolean(
-      input.planning_preferences?.prioritize_interest_savings,
+      planningPreferences.prioritize_interest_savings as boolean | undefined,
       "planning_preferences.prioritize_interest_savings",
       "Interest-savings preference must be a boolean.",
       errors,
     ) ?? false;
 
-  if (
-    input.planning_preferences?.strategy !== undefined &&
-    input.planning_preferences.strategy !== "runway-first"
-  ) {
+  if (planningPreferences.strategy !== undefined && planningPreferences.strategy !== "runway-first") {
     errors.push({
       path: "planning_preferences.strategy",
       message: "Planning strategy must be runway-first in v1.",
@@ -523,7 +564,8 @@ export function normalizeFinancialProfile(
     seenDebtIds.add(entry.normalized.id);
   }
 
-  const expectedMonthlyIncomeInput = input.income_assumptions?.expected_monthly_income ?? 0;
+  const expectedMonthlyIncomeInput =
+    (incomeAssumptions.expected_monthly_income as number | undefined) ?? 0;
   if (!Number.isFinite(expectedMonthlyIncomeInput)) {
     errors.push({
       path: "income_assumptions.expected_monthly_income",
@@ -540,7 +582,7 @@ export function normalizeFinancialProfile(
     incomeIsConfirmed && expectedMonthlyIncomeInput > 0 ? expectedMonthlyIncomeInput : 0;
 
   const runwayFloorMonths =
-    input.planning_preferences?.runway_floor_months ?? DEFAULT_RUNWAY_FLOOR_MONTHS;
+    (planningPreferences.runway_floor_months as number | undefined) ?? DEFAULT_RUNWAY_FLOOR_MONTHS;
   const normalizedRunwayFloorMonths = readPositiveNumber(
     runwayFloorMonths,
     "planning_preferences.runway_floor_months",
@@ -633,8 +675,20 @@ export function normalizePlannerResult(
   }
 
   const errors: ValidationIssue[] = [];
-  const snapshot = input.snapshot ?? {};
-  const runwayEstimate = input.runway_estimate ?? {};
+  const snapshot =
+    readOptionalObject(
+      input.snapshot,
+      "snapshot",
+      "Planner snapshot must be an object when provided.",
+      errors,
+    ) ?? {};
+  const runwayEstimate =
+    readOptionalObject(
+      input.runway_estimate,
+      "runway_estimate",
+      "Runway estimate must be an object when provided.",
+      errors,
+    ) ?? {};
   const recommendedImmediateActionInputs = readArray(
     input.recommended_immediate_actions,
     "recommended_immediate_actions",

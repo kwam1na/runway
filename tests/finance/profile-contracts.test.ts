@@ -268,6 +268,39 @@ describe("financial profile contracts", () => {
     ]);
   });
 
+  it("rejects malformed nested profile sections instead of silently defaulting them", () => {
+    const result = normalizeFinancialProfile({
+      cash_position: {
+        available_cash: 18000,
+        reserved_cash: 2500,
+        severance_total: 12000,
+      },
+      monthly_obligations: {
+        essentials: 3200,
+      },
+      debts: [],
+      income_assumptions: "oops" as unknown as never,
+      planning_preferences: "oops" as unknown as never,
+    });
+
+    expect(result.ok).toBe(false);
+
+    if (result.ok) {
+      throw new Error("expected malformed nested profile section failure");
+    }
+
+    expect(result.errors).toEqual([
+      {
+        path: "income_assumptions",
+        message: "Income assumptions must be an object when provided.",
+      },
+      {
+        path: "planning_preferences",
+        message: "Planning preferences must be an object when provided.",
+      },
+    ]);
+  });
+
   it("validates boolean and policy fields at runtime instead of trusting static typing", () => {
     const result = normalizeFinancialProfile({
       cash_position: {
@@ -578,6 +611,50 @@ describe("financial profile contracts", () => {
       {
         path: "monthly_plan[0].debt_payments",
         message: "Monthly debt payments must be provided as an array.",
+      },
+    ]);
+  });
+
+  it("rejects malformed nested planner-result sections instead of silently treating them as empty", () => {
+    const result = normalizePlannerResult({
+      snapshot: "oops" as unknown as never,
+      recommended_immediate_actions: [],
+      monthly_plan: [],
+      runway_estimate: "oops" as unknown as never,
+      assumptions: [],
+      risk_flags: [],
+    });
+
+    expect(result.ok).toBe(false);
+
+    if (result.ok) {
+      throw new Error("expected malformed nested planner section failure");
+    }
+
+    expect(result.errors).toEqual([
+      {
+        path: "snapshot",
+        message: "Planner snapshot must be an object when provided.",
+      },
+      {
+        path: "runway_estimate",
+        message: "Runway estimate must be an object when provided.",
+      },
+      {
+        path: "snapshot.liquid_cash",
+        message: "Snapshot liquid cash is required.",
+      },
+      {
+        path: "snapshot.monthly_burn",
+        message: "Snapshot monthly burn is required.",
+      },
+      {
+        path: "snapshot.runway_months",
+        message: "Snapshot runway months is required.",
+      },
+      {
+        path: "runway_estimate.months",
+        message: "Runway estimate months is required.",
       },
     ]);
   });
