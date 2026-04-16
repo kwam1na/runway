@@ -2,6 +2,7 @@ import { access, copyFile, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { runAgentWorkflow, type AgentWorkflowOutcome } from "./agents/index.js";
 import type { LocalFinancialProfileInput } from "./finance/index.js";
+import { ingestStatementsIntoProfile } from "./statement-intake/index.js";
 
 export type InteractiveAssistOptions = {
   profilePath: string;
@@ -341,6 +342,21 @@ export async function runInteractiveAssist(
   options: InteractiveAssistOptions,
 ): Promise<AgentWorkflowOutcome> {
   let profile = await readOrBootstrapProfile(options.profilePath, options.ask);
+
+  if (options.statementPaths && options.statementPaths.length > 0) {
+    const reviewedProfile = await ingestStatementsIntoProfile({
+      profile,
+      statementPaths: options.statementPaths,
+      ask: options.ask,
+    });
+
+    if (JSON.stringify(reviewedProfile) !== JSON.stringify(profile)) {
+      await ensureBackup(options.profilePath);
+      profile = reviewedProfile;
+      await writeProfile(options.profilePath, profile);
+    }
+  }
+
   let outcome = runAgentWorkflow(profile);
 
   if (!options.isInteractive || outcome.status !== "needs-input") {
