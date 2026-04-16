@@ -11,6 +11,14 @@ This file is generated from the harness registry.
 - `npm run typecheck`
 - `npm run test`
 
+## agent workflow logic
+
+- Path prefixes:
+- `src/runway/agents`
+- Commands:
+- `npm run typecheck`
+- `npm run test`
+
 ## cli and harness logic
 
 - Path prefixes:
@@ -50,7 +58,7 @@ This file is generated from the harness registry.
 ## scenario inventory
 
 - Path prefixes:
-- `src/runway/scenarios/inventory.ts`
+- `src/runway/scenarios`
 - Commands:
 - `npm run typecheck`
 - `npm run test`

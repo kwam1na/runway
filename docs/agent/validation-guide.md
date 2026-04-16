@@ -12,6 +12,17 @@ This file is generated from the harness registry.
 - `npm run test`
 - Behavior scenarios:
 - `cli-runway-smoke`
+- `cli-runway-assist`
+
+## agent workflow logic
+
+- Path prefixes:
+- `src/runway/agents`
+- Commands:
+- `npm run typecheck`
+- `npm run test`
+- Behavior scenarios:
+- `cli-runway-assist`
 
 ## cli and harness logic
 
@@ -58,7 +69,7 @@ This file is generated from the harness registry.
 ## scenario inventory
 
 - Path prefixes:
-- `src/runway/scenarios/inventory.ts`
+- `src/runway/scenarios`
 - Commands:
 - `npm run typecheck`
 - `npm run test`
@@ -66,6 +77,7 @@ This file is generated from the harness registry.
 - `npm run harness:check`
 - Behavior scenarios:
 - `cli-runway-smoke`
+- `cli-runway-assist`
 
 ## manual docs
 

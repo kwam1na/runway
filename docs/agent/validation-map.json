@@ -71,7 +71,27 @@
             }
           ],
           "behaviorScenarios": [
-            "cli-runway-smoke"
+            "cli-runway-smoke",
+            "cli-runway-assist"
+          ]
+        },
+        {
+          "name": "agent workflow logic",
+          "pathPrefixes": [
+            "src/runway/agents"
+          ],
+          "commands": [
+            {
+              "kind": "npm",
+              "script": "typecheck"
+            },
+            {
+              "kind": "npm",
+              "script": "test"
+            }
+          ],
+          "behaviorScenarios": [
+            "cli-runway-assist"
           ]
         },
         {
@@ -143,7 +163,7 @@
         {
           "name": "scenario inventory",
           "pathPrefixes": [
-            "src/runway/scenarios/inventory.ts"
+            "src/runway/scenarios"
           ],
           "commands": [
             {
@@ -164,7 +184,8 @@
             }
           ],
           "behaviorScenarios": [
-            "cli-runway-smoke"
+            "cli-runway-smoke",
+            "cli-runway-assist"
           ]
         },
         {
@@ -246,6 +267,18 @@
         "help"
       ],
       "artifactPath": "artifacts/behavior-cli-runway-smoke.json"
+    },
+    {
+      "name": "cli-runway-assist",
+      "description": "Runs the minimal agent loop against a partial profile and local answer patch.",
+      "command": [
+        "tsx",
+        "src/runway/cli.ts",
+        "assist",
+        "src/runway/scenarios/fixtures/assist-partial-profile.json",
+        "src/runway/scenarios/fixtures/assist-answer-patch.json"
+      ],
+      "artifactPath": "artifacts/behavior-cli-runway-assist.json"
     }
   ],
   "surfaces": [
@@ -266,7 +299,27 @@
         }
       ],
       "behaviorScenarios": [
-        "cli-runway-smoke"
+        "cli-runway-smoke",
+        "cli-runway-assist"
+      ]
+    },
+    {
+      "name": "agent workflow logic",
+      "pathPrefixes": [
+        "src/runway/agents"
+      ],
+      "commands": [
+        {
+          "kind": "npm",
+          "script": "typecheck"
+        },
+        {
+          "kind": "npm",
+          "script": "test"
+        }
+      ],
+      "behaviorScenarios": [
+        "cli-runway-assist"
       ]
     },
     {
@@ -338,7 +391,7 @@
     {
       "name": "scenario inventory",
       "pathPrefixes": [
-        "src/runway/scenarios/inventory.ts"
+        "src/runway/scenarios"
       ],
       "commands": [
         {
@@ -359,7 +412,8 @@
         }
       ],
       "behaviorScenarios": [
-        "cli-runway-smoke"
+        "cli-runway-smoke",
+        "cli-runway-assist"
       ]
     },
     {

@@ -39,6 +39,7 @@ describe("runtime tools", () => {
       const report = await runBehaviorScenarios();
 
       expect(report.artifactPaths).toContain("artifacts/behavior-cli-runway-smoke.json");
+      expect(report.artifactPaths).toContain("artifacts/behavior-cli-runway-assist.json");
 
       const artifact = JSON.parse(
         readFileSync(resolve(workspace, "artifacts/behavior-cli-runway-smoke.json"), "utf8"),
@@ -57,8 +58,9 @@ describe("runtime tools", () => {
       const scorecard = await buildScorecard();
 
       expect(scorecard).toContain("Harness Scorecard");
-      expect(scorecard).toContain("Scenario count: 1");
+      expect(scorecard).toContain("Scenario count: 2");
       expect(scorecard).toContain("cli-runway-smoke");
+      expect(scorecard).toContain("cli-runway-assist");
     });
   });
 
@@ -67,10 +69,12 @@ describe("runtime tools", () => {
       const behavior = await runCli(["behavior"]);
       expect(behavior.exitCode).toBe(0);
       expect(behavior.stdout).toContain("behavior-cli-runway-smoke.json");
+      expect(behavior.stdout).toContain("behavior-cli-runway-assist.json");
 
       const runtimeTrends = await runCli(["runtime-trends"]);
       expect(runtimeTrends.exitCode).toBe(0);
       expect(runtimeTrends.stdout).toContain("cli-runway-smoke");
+      expect(runtimeTrends.stdout).toContain("cli-runway-assist");
 
       const scorecard = await runCli(["scorecard"]);
       expect(scorecard.exitCode).toBe(0);

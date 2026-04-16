@@ -67,12 +67,25 @@ describe("registry", () => {
   });
 
   it("defines the bootstrap CLI scenario", () => {
-    expect(behaviorScenarios).toContainEqual(
-      expect.objectContaining({
-        name: "cli-runway-smoke",
-        command: ["tsx", "src/runway/cli.ts", "help"],
-        artifactPath: "artifacts/behavior-cli-runway-smoke.json",
-      }),
+    expect(behaviorScenarios).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: "cli-runway-smoke",
+          command: ["tsx", "src/runway/cli.ts", "help"],
+          artifactPath: "artifacts/behavior-cli-runway-smoke.json",
+        }),
+        expect.objectContaining({
+          name: "cli-runway-assist",
+          command: [
+            "tsx",
+            "src/runway/cli.ts",
+            "assist",
+            "src/runway/scenarios/fixtures/assist-partial-profile.json",
+            "src/runway/scenarios/fixtures/assist-answer-patch.json",
+          ],
+          artifactPath: "artifacts/behavior-cli-runway-assist.json",
+        }),
+      ]),
     );
   });
 });

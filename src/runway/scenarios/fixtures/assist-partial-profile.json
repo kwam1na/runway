@@ -1,0 +1,22 @@
+{
+  "cash_position": {
+    "available_cash": 18000,
+    "reserved_cash": 2500,
+    "severance_total": 12000
+  },
+  "monthly_obligations": {
+    "essentials": 3200,
+    "discretionary": 450
+  },
+  "debts": [
+    {
+      "id": "card-a",
+      "label": "Card A",
+      "balance": 6400
+    }
+  ],
+  "income_assumptions": {
+    "expected_monthly_income": 0,
+    "income_is_confirmed": false
+  }
+}

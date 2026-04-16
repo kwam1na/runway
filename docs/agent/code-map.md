@@ -13,6 +13,6 @@
 - `src/runway/scenarios/`: executable runtime scenario inventory
 - `docs/agent/`: local onboarding docs in this bootstrap checkout
 - `docs/agent/analysis-workflow.md`: agent-agnostic intake, validation, and analysis guidance
-- `src/runway/agents/`: agent workflow logic
+- `src/runway/agents/`: implemented minimal agent loop for local profile progression and reruns
 - `src/runway/finance/`: finance-domain logic
 - `graphify-out/`: generated docs output
