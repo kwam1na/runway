@@ -27,3 +27,4 @@ This starts with `npm run validate:pr` and adds the registry-refresh steps you s
 ## Manual Extras
 
 - `npm run harness:behavior` is an extra manual check, not part of `validate:pr`.
+- When agent workflow docs change, rerun `npm run harness:generate` so `docs/agent/analysis-workflow.md` coverage is reflected in the generated validation outputs.

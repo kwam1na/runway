@@ -9,6 +9,7 @@ export const harnessTargets = [
     auditedRoots: ["src/runway", "docs/agent", "tests", ".github/workflows", "graphify-out"],
     requiredDocs: [
       "docs/agent/index.md",
+      "docs/agent/analysis-workflow.md",
       "docs/agent/architecture.md",
       "docs/agent/testing.md",
       "docs/agent/code-map.md",
@@ -86,6 +87,7 @@ export const harnessTargets = [
           "README.md",
           "AGENTS.md",
           "docs/agent/index.md",
+          "docs/agent/analysis-workflow.md",
           "docs/agent/architecture.md",
           "docs/agent/testing.md",
           "docs/agent/code-map.md",

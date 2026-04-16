@@ -10,6 +10,7 @@ describe("agent docs", () => {
     const agents = readFileSync(resolve(root, "AGENTS.md"), "utf8");
     const index = readFileSync(resolve(root, "docs/agent/index.md"), "utf8");
     const architecture = readFileSync(resolve(root, "docs/agent/architecture.md"), "utf8");
+    const analysisWorkflow = readFileSync(resolve(root, "docs/agent/analysis-workflow.md"), "utf8");
     const testing = readFileSync(resolve(root, "docs/agent/testing.md"), "utf8");
     const codeMap = readFileSync(resolve(root, "docs/agent/code-map.md"), "utf8");
     const packageJson = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8")) as {
@@ -19,6 +20,7 @@ describe("agent docs", () => {
     expect(existsSync(resolve(root, "src/runway/cli.ts"))).toBe(true);
     expect(existsSync(resolve(root, "src/runway/index.ts"))).toBe(true);
     expect(existsSync(resolve(root, "docs/agent"))).toBe(true);
+    expect(existsSync(resolve(root, "docs/agent/analysis-workflow.md"))).toBe(true);
     expect(existsSync(resolve(root, "src/runway/harness/app-registry.ts"))).toBe(true);
     expect(existsSync(resolve(root, "src/runway/scenarios/inventory.ts"))).toBe(true);
     expect(existsSync(resolve(root, "graphify-out"))).toBe(true);
@@ -53,6 +55,7 @@ describe("agent docs", () => {
     expect(readme).toContain("npm run harness:review");
     expect(readme).toContain("npm run harness:audit");
     expect(readme).toContain("npm run validate:pr");
+    expect(readme).toContain("docs/agent/analysis-workflow.md");
     expect(readme).not.toContain("stub:*");
 
     expect(agents).toContain("Start here");
@@ -69,11 +72,31 @@ describe("agent docs", () => {
     expect(index).toContain("## Boundaries");
     expect(index).toContain("## Common Validations");
     expect(index).toContain("src/runway/cli.ts");
+    expect(index).toContain("docs/agent/analysis-workflow.md");
+    expect(index).toContain("analyze");
     expect(index).toContain("src/runway/harness/app-registry.ts");
     expect(index).toContain("src/runway/scenarios/inventory.ts");
     expect(index).toContain("npm run harness:check");
     expect(index).toContain("npm run harness:review");
     expect(index).not.toContain("stub:check");
+
+    expect(analysisWorkflow).toContain("## Workflow");
+    expect(analysisWorkflow).toContain("## Thin Wrapper Pattern");
+    expect(analysisWorkflow).toContain("## Boundaries");
+    expect(analysisWorkflow).toContain("analyze <profile-path>");
+    expect(analysisWorkflow).toContain("LocalFinancialProfileInput");
+    expect(analysisWorkflow).toContain("normalizeFinancialProfile");
+    expect(analysisWorkflow).toContain("analyzeProfilePayload");
+    expect(analysisWorkflow).toContain("buildRunwayPlan");
+    expect(analysisWorkflow).toContain("available_cash");
+    expect(analysisWorkflow).toContain("expected_monthly_income");
+    expect(analysisWorkflow).toContain("income_is_confirmed");
+    expect(analysisWorkflow).toContain("question");
+    expect(analysisWorkflow).toContain("local-only");
+    expect(analysisWorkflow).toContain("runway-first");
+    expect(analysisWorkflow).toContain("No future income is assumed until it is confirmed.");
+    expect(analysisWorkflow).toContain("not financial advice");
+    expect(analysisWorkflow).not.toContain("alternate field names");
 
     expect(architecture).toContain("## Entrypoints");
     expect(architecture).toContain("## Edit Here, Not There");
@@ -98,6 +121,7 @@ describe("agent docs", () => {
     expect(codeMap).toContain("src/runway/scenarios/");
     expect(codeMap).toContain("src/runway/agents/");
     expect(codeMap).toContain("src/runway/finance/");
+    expect(codeMap).toContain("docs/agent/analysis-workflow.md");
     expect(codeMap).toContain("graphify-out/");
   });
 });
