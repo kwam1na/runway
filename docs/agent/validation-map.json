@@ -35,6 +35,12 @@
           ]
         },
         {
+          "label": "statement ingestion",
+          "paths": [
+            "src/runway/statement-intake"
+          ]
+        },
+        {
           "label": "finance domain logic",
           "paths": [
             "src/runway/finance"
@@ -118,6 +124,23 @@
           "behaviorScenarios": [
             "cli-runway-assist"
           ]
+        },
+        {
+          "name": "statement ingestion logic",
+          "pathPrefixes": [
+            "src/runway/statement-intake"
+          ],
+          "commands": [
+            {
+              "kind": "npm",
+              "script": "typecheck"
+            },
+            {
+              "kind": "npm",
+              "script": "test"
+            }
+          ],
+          "behaviorScenarios": []
         },
         {
           "name": "cli and harness logic",
@@ -365,6 +388,23 @@
       "behaviorScenarios": [
         "cli-runway-assist"
       ]
+    },
+    {
+      "name": "statement ingestion logic",
+      "pathPrefixes": [
+        "src/runway/statement-intake"
+      ],
+      "commands": [
+        {
+          "kind": "npm",
+          "script": "typecheck"
+        },
+        {
+          "kind": "npm",
+          "script": "test"
+        }
+      ],
+      "behaviorScenarios": []
     },
     {
       "name": "cli and harness logic",

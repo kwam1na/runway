@@ -10,6 +10,10 @@ This file is generated from the harness registry.
 
 - `src/runway/interactive-assist.ts`
 
+## statement ingestion
+
+- `src/runway/statement-intake`
+
 ## finance domain logic
 
 - `src/runway/finance`

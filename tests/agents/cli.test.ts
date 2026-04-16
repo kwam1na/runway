@@ -57,6 +57,130 @@ function restoreTtyState(
 }
 
 describe("agent workflow cli", () => {
+  it("passes statement file paths into interactive assist", async () => {
+    const profilePath = writeJsonFile("partial-profile.json", {
+      cash_position: {
+        available_cash: 18000,
+        reserved_cash: 2500,
+        severance_total: 12000,
+      },
+      monthly_obligations: {
+        essentials: 3200,
+      },
+      debts: [],
+      income_assumptions: {},
+    });
+    const stdinDescriptor = Object.getOwnPropertyDescriptor(process.stdin, "isTTY");
+    const stdoutDescriptor = Object.getOwnPropertyDescriptor(process.stdout, "isTTY");
+
+    Object.defineProperty(process.stdin, "isTTY", { value: true, configurable: true });
+    Object.defineProperty(process.stdout, "isTTY", { value: true, configurable: true });
+
+    vi.mocked(runInteractiveAssist).mockResolvedValue({
+      status: "ready",
+      profile: {
+        cash_position: {
+          available_cash: 18000,
+          reserved_cash: 2500,
+          severance_total: 12000,
+        },
+        monthly_obligations: {
+          essentials: 3200,
+        },
+        debts: [],
+        income_assumptions: {},
+      },
+      analysis: {
+        ok: true,
+        profile: {} as never,
+        result: {
+          snapshot: {
+            liquid_cash: 1,
+            monthly_burn: 1,
+            runway_months: 1,
+          },
+          recommended_immediate_actions: [],
+          monthly_plan: [],
+          runway_estimate: {
+            months: 1,
+            floor_months: 6,
+            floor_status: "meets-floor",
+          },
+          assumptions: [],
+          risk_flags: [],
+        },
+        report: "# Runway Analysis",
+      },
+      result: {
+        snapshot: {
+          liquid_cash: 1,
+          monthly_burn: 1,
+          runway_months: 1,
+        },
+        recommended_immediate_actions: [],
+        monthly_plan: [],
+        runway_estimate: {
+          months: 1,
+          floor_months: 6,
+          floor_status: "meets-floor",
+        },
+        assumptions: [],
+        risk_flags: [],
+      },
+      report: "# Runway Analysis",
+    });
+
+    try {
+      const result = await runCli([
+        "assist",
+        profilePath,
+        "--statements",
+        "card-a.pdf",
+        "card-b.png",
+      ]);
+
+      expect(result.exitCode).toBe(0);
+      expect(runInteractiveAssist).toHaveBeenCalledWith({
+        profilePath,
+        ask: expect.any(Function),
+        isInteractive: true,
+        statementPaths: ["card-a.pdf", "card-b.png"],
+      });
+    } finally {
+      restoreTtyState(stdinDescriptor, stdoutDescriptor);
+    }
+  });
+
+  it("rejects statement ingestion when no file paths are provided", async () => {
+    const profilePath = writeJsonFile("partial-profile.json", {
+      cash_position: {
+        available_cash: 18000,
+        reserved_cash: 2500,
+        severance_total: 12000,
+      },
+      monthly_obligations: {
+        essentials: 3200,
+      },
+      debts: [],
+      income_assumptions: {},
+    });
+    const stdinDescriptor = Object.getOwnPropertyDescriptor(process.stdin, "isTTY");
+    const stdoutDescriptor = Object.getOwnPropertyDescriptor(process.stdout, "isTTY");
+
+    Object.defineProperty(process.stdin, "isTTY", { value: true, configurable: true });
+    Object.defineProperty(process.stdout, "isTTY", { value: true, configurable: true });
+
+    try {
+      const result = await runCli(["assist", profilePath, "--statements"]);
+
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain("--statements <file> ...");
+      expect(runInteractiveAssist).not.toHaveBeenCalled();
+    } finally {
+      restoreTtyState(stdinDescriptor, stdoutDescriptor);
+    }
+  });
+
   it("creates a default profile path for interactive assist when none is provided", async () => {
     const dir = mkdtempSync(join(tmpdir(), "runway-agent-cli-cwd-"));
     tempDirs.push(dir);

@@ -2,7 +2,10 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { runInteractiveAssist } from "../../src/runway/interactive-assist.js";
+import {
+  buildStatementIngestionRequest,
+  runInteractiveAssist,
+} from "../../src/runway/interactive-assist.js";
 
 const tempDirs: string[] = [];
 
@@ -21,6 +24,15 @@ function writeProfile(payload: unknown): string {
 }
 
 describe("interactive assist", () => {
+  it("parses statement file paths out of assist arguments", () => {
+    expect(
+      buildStatementIngestionRequest(["profile.json", "--statements", "card-a.pdf", "card-b.png"]),
+    ).toEqual({
+      profilePath: "profile.json",
+      statementPaths: ["card-a.pdf", "card-b.png"],
+    });
+  });
+
   it("continues through apr and minimum payment until the profile is ready", async () => {
     const originalProfile = {
       cash_position: {

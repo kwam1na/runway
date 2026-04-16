@@ -27,6 +27,14 @@ This file is generated from the harness registry.
 - `npm run typecheck`
 - `npm run test`
 
+## statement ingestion logic
+
+- Path prefixes:
+- `src/runway/statement-intake`
+- Commands:
+- `npm run typecheck`
+- `npm run test`
+
 ## cli and harness logic
 
 - Path prefixes:
