@@ -30,3 +30,4 @@ This starts with `npm run validate:pr` and adds the registry-refresh steps you s
 - When agent workflow docs change, rerun `npm run harness:generate` so `docs/agent/analysis-workflow.md` coverage is reflected in the generated validation outputs.
 - Interactive CLI prompting is covered by focused Vitest suites under `tests/agents/` rather than the deterministic behavior scenario runner.
 - Statement-ingestion regressions currently live under `tests/agents/statement-extraction.test.ts`, `tests/agents/statement-normalization.test.ts`, and `tests/agents/statement-review.test.ts`.
+- Browser-wrapper regressions live under `tests/agents/web-session.test.ts` and `tests/agents/web-server.test.ts`.

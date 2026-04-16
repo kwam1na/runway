@@ -25,3 +25,13 @@ This repo uses Husky-managed Git hooks after `npm install` runs the `prepare` sc
 
 `validate:commit` is the local commit gate: `typecheck`, `test`, and `harness:check`.
 `validate:push` delegates to `npm run validate:pr`, which is the full PR-time validation flow.
+
+## Browser Workflow
+
+Runway also ships a local browser wrapper around the same intake and analysis engine:
+
+```bash
+npx tsx src/runway/cli.ts web [profile-path]
+```
+
+The `web` command starts a local-only server, keeps the profile as a JSON file on disk, supports statement upload and review in the browser, and surfaces the shared runway report once the workflow is ready.

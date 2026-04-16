@@ -4,6 +4,7 @@ import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { runInteractiveAssist } from "../../src/runway/interactive-assist.js";
 import { runCli } from "../../src/runway/cli.js";
+import { startRunwayWebServer } from "../../src/runway/web/server.js";
 
 vi.mock("../../src/runway/interactive-assist.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../../src/runway/interactive-assist.js")>();
@@ -11,6 +12,15 @@ vi.mock("../../src/runway/interactive-assist.js", async (importOriginal) => {
   return {
     ...actual,
     runInteractiveAssist: vi.fn(),
+  };
+});
+
+vi.mock("../../src/runway/web/server.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../src/runway/web/server.js")>();
+
+  return {
+    ...actual,
+    startRunwayWebServer: vi.fn(),
   };
 });
 
@@ -149,6 +159,31 @@ describe("agent workflow cli", () => {
     } finally {
       restoreTtyState(stdinDescriptor, stdoutDescriptor);
     }
+  });
+
+  it("starts the browser workflow server from the web command", async () => {
+    const profilePath = writeJsonFile("browser-profile.json", {
+      debts: [],
+    });
+
+    vi.mocked(startRunwayWebServer).mockResolvedValue({
+      url: "http://127.0.0.1:43123",
+      port: 43123,
+      profilePath,
+      close: async () => {},
+    });
+
+    const result = await runCli(["web", profilePath]);
+
+    expect(result.exitCode).toBe(0);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      command: "web",
+      url: "http://127.0.0.1:43123",
+      profilePath,
+    });
+    expect(startRunwayWebServer).toHaveBeenCalledWith({
+      profilePath,
+    });
   });
 
   it("rejects statement ingestion when no file paths are provided", async () => {

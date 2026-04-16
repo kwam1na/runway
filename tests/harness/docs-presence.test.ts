@@ -40,6 +40,7 @@ describe("agent docs", () => {
 
     expect(helpResult.exitCode).toBe(0);
     expect(helpResult.stdout).toContain("assist");
+    expect(helpResult.stdout).toContain("web");
     expect(helpResult.stdout).toContain("generate");
     expect(helpResult.stdout).toContain("check");
     expect(helpResult.stdout).toContain("review");
@@ -52,6 +53,8 @@ describe("agent docs", () => {
     expect(auditResult.stdout).toContain("\"command\":\"audit\"");
 
     expect(readme).toContain("Harness Commands");
+    expect(readme).toContain("Browser Workflow");
+    expect(readme).toContain("src/runway/cli.ts web [profile-path]");
     expect(readme).toContain("npm run harness:generate");
     expect(readme).toContain("npm run harness:check");
     expect(readme).toContain("npm run harness:behavior");
@@ -75,9 +78,11 @@ describe("agent docs", () => {
     expect(index).toContain("## Boundaries");
     expect(index).toContain("## Common Validations");
     expect(index).toContain("src/runway/cli.ts");
+    expect(index).toContain("src/runway/web/");
     expect(index).toContain("docs/agent/analysis-workflow.md");
     expect(index).toContain("analyze");
     expect(index).toContain("assist");
+    expect(index).toContain("web");
     expect(index).toContain("interactive TTY");
     expect(index).toContain("statement-first");
     expect(index).toContain("additional manual debts");
@@ -93,6 +98,7 @@ describe("agent docs", () => {
     expect(analysisWorkflow).toContain("## Boundaries");
     expect(analysisWorkflow).toContain("analyze <profile-path>");
     expect(analysisWorkflow).toContain("assist [profile-path] [answer-patch-path]");
+    expect(analysisWorkflow).toContain("tsx src/runway/cli.ts web [profile-path]");
     expect(analysisWorkflow).toContain("runway-profile.json");
     expect(analysisWorkflow).toContain("Interactive TTY mode");
     expect(analysisWorkflow).toContain("missing profile plus `--statements`");
@@ -117,6 +123,7 @@ describe("agent docs", () => {
     expect(architecture).toContain("## Entrypoints");
     expect(architecture).toContain("## Edit Here, Not There");
     expect(architecture).toContain("src/runway/cli.ts");
+    expect(architecture).toContain("src/runway/web/");
     expect(architecture).toContain("src/runway/harness/app-registry.ts");
     expect(architecture).toContain("src/runway/scenarios/inventory.ts");
 
@@ -129,11 +136,13 @@ describe("agent docs", () => {
     expect(testing).toContain("npm run harness:behavior");
     expect(testing).toContain("npm run validate:pr");
     expect(testing).toContain("src/runway/interactive-assist.ts");
+    expect(testing).toContain("tests/agents/web-session.test.ts");
     expect(testing).not.toContain("stub:*");
 
     expect(codeMap).toContain("## Key Folders");
     expect(codeMap).toContain("src/runway/index.ts");
     expect(codeMap).toContain("src/runway/cli.ts");
+    expect(codeMap).toContain("src/runway/web/");
     expect(codeMap).toContain("src/runway/harness/");
     expect(codeMap).toContain("src/runway/scenarios/");
     expect(codeMap).toContain("src/runway/agents/");

@@ -27,6 +27,14 @@ This file is generated from the harness registry.
 - `npm run typecheck`
 - `npm run test`
 
+## browser workflow logic
+
+- Path prefixes:
+- `src/runway/web`
+- Commands:
+- `npm run typecheck`
+- `npm run test`
+
 ## statement ingestion logic
 
 - Path prefixes:

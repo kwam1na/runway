@@ -20,6 +20,14 @@ Use the shared finance contract and runner for every agent integration so that i
 7. When the workflow reaches `ready`, present the shared `report` and `result` output instead of restating calculation rules inside the wrapper.
 8. Keep any extra agent-specific phrasing outside the planning logic.
 
+Local browser wrapper path:
+
+```bash
+tsx src/runway/cli.ts web [profile-path]
+```
+
+The `web` command starts a local HTTP server and serves a guided browser flow backed by the same shared profile file and workflow state. The browser wrapper uses server JSON endpoints for profile writes, statement extraction, reviewed statement merges, and final plan rendering, but it must still preserve the shared field names, local-only storage boundary, and runway-first planning rules.
+
 Happy path:
 
 ```json
@@ -157,6 +165,13 @@ export function runValidatedAgentAnalysis(
 ```
 
 Thin wrappers should collect inputs, persist local state, call the shared runner, and phrase the response. They should not duplicate payoff ranking, rewrite assumptions, rename schema keys, or override defaults owned by the shared contract.
+
+The browser wrapper follows the same thin-wrapper rule:
+
+- server orchestration lives under `src/runway/web/`
+- the browser stores working state in the same profile JSON file on disk
+- reviewed statement candidates still flow through the shared statement-intake helpers before plan generation
+- plan output still comes from the shared `runAgentWorkflow` result rather than browser-specific recommendation logic
 
 Statement ingestion remains an intake helper around the shared workflow rather than a second planning path:
 

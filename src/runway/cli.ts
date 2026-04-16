@@ -5,6 +5,9 @@ export type CliResult = {
   exitCode: number;
   stdout: string;
   stderr: string;
+  holdOpen?: {
+    close(): Promise<void>;
+  };
 };
 
 import { runAgentWorkflow } from "./agents/index.js";
@@ -23,6 +26,7 @@ import {
   resolveDefaultProfilePath,
   runInteractiveAssist,
 } from "./interactive-assist.js";
+import { startRunwayWebServer } from "./web/server.js";
 
 const supportedCommands = [
   "analyze",
@@ -36,6 +40,7 @@ const supportedCommands = [
   "runtime-trends",
   "scorecard",
   "janitor",
+  "web",
   "help",
 ] as const;
 
@@ -105,6 +110,29 @@ export async function runCli(args: string[]): Promise<CliResult> {
   if (command === "generate") {
     const outputs = await generateHarnessArtifacts();
     return jsonResult(command, { outputs });
+  }
+
+  if (command === "web") {
+    try {
+      const server = await startRunwayWebServer({
+        profilePath: args[1],
+      });
+
+      return {
+        ...jsonResult(command, {
+          profilePath: server.profilePath,
+          url: server.url,
+          port: server.port,
+        }),
+        holdOpen: server,
+      };
+    } catch (error) {
+      return {
+        exitCode: 1,
+        stdout: "",
+        stderr: error instanceof Error ? error.message : String(error),
+      };
+    }
   }
 
   if (command === "analyze") {
@@ -349,5 +377,16 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const result = await runCli(process.argv.slice(2));
   if (result.stdout) process.stdout.write(`${result.stdout}\n`);
   if (result.stderr) process.stderr.write(`${result.stderr}\n`);
-  process.exit(result.exitCode);
+
+  if (!result.holdOpen) {
+    process.exit(result.exitCode);
+  }
+
+  const shutdown = async () => {
+    await result.holdOpen?.close();
+    process.exit(result.exitCode);
+  };
+
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
 }

@@ -70,6 +70,10 @@ describe("registry", () => {
           label: "interactive assist",
           paths: ["src/runway/interactive-assist.ts"],
         }),
+        expect.objectContaining({
+          label: "browser workflow",
+          paths: ["src/runway/web"],
+        }),
       ]),
     );
     expect(harnessTargets[0].validationSurfaces).toEqual(
@@ -77,6 +81,10 @@ describe("registry", () => {
         expect.objectContaining({
           name: "interactive assist logic",
           pathPrefixes: ["src/runway/interactive-assist.ts"],
+        }),
+        expect.objectContaining({
+          name: "browser workflow logic",
+          pathPrefixes: ["src/runway/web"],
         }),
       ]),
     );
