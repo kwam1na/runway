@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { runCli } from "../../src/runway/cli.js";
 
 describe("agent docs", () => {
-  it("provides the root and local onboarding docs", async () => {
+  it("describes the real harness command surface", async () => {
     const root = process.cwd();
     const readme = readFileSync(resolve(root, "README.md"), "utf8");
     const agents = readFileSync(resolve(root, "AGENTS.md"), "utf8");
@@ -15,148 +15,82 @@ describe("agent docs", () => {
     const packageJson = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8")) as {
       scripts?: Record<string, string>;
     };
-    const cliExists = existsSync(resolve(root, "src/runway/cli.ts"));
-    const currentSourceExists = existsSync(resolve(root, "src/runway/index.ts"));
-    const currentDocsDirExists = existsSync(resolve(root, "docs/agent"));
-    const plannedRegistryExists = existsSync(resolve(root, "src/runway/harness/app-registry.ts"));
-    const plannedScenarioExists = existsSync(resolve(root, "src/runway/scenarios/inventory.ts"));
-    const generatedGraphExists = existsSync(resolve(root, "graphify-out"));
-    const scripts = packageJson.scripts ?? {};
 
-    expect(cliExists).toBe(true);
-    expect(currentSourceExists).toBe(true);
-    expect(currentDocsDirExists).toBe(true);
-    expect(plannedRegistryExists).toBe(true);
-    expect(plannedScenarioExists).toBe(true);
-    expect(generatedGraphExists).toBe(true);
+    expect(existsSync(resolve(root, "src/runway/cli.ts"))).toBe(true);
+    expect(existsSync(resolve(root, "src/runway/index.ts"))).toBe(true);
+    expect(existsSync(resolve(root, "docs/agent"))).toBe(true);
+    expect(existsSync(resolve(root, "src/runway/harness/app-registry.ts"))).toBe(true);
+    expect(existsSync(resolve(root, "src/runway/scenarios/inventory.ts"))).toBe(true);
+    expect(existsSync(resolve(root, "graphify-out"))).toBe(true);
+
+    const scripts = packageJson.scripts ?? {};
+    expect(scripts["harness:generate"]).toBe("tsx src/runway/cli.ts generate");
+    expect(scripts["harness:check"]).toBe("tsx src/runway/cli.ts check");
+    expect(scripts["harness:review"]).toBe("tsx src/runway/cli.ts review");
+    expect(scripts["harness:audit"]).toBe("tsx src/runway/cli.ts audit");
+
+    const generateResult = await runCli(["generate"]);
     const checkResult = await runCli(["check"]);
     const auditResult = await runCli(["audit"]);
     const helpResult = await runCli(["help"]);
+
     expect(helpResult.exitCode).toBe(0);
     expect(helpResult.stdout).toContain("generate");
     expect(helpResult.stdout).toContain("check");
+    expect(helpResult.stdout).toContain("review");
     expect(helpResult.stdout).toContain("audit");
+    expect(generateResult.exitCode).toBe(0);
     expect(checkResult.exitCode).toBe(0);
-    expect(checkResult.stdout).toBe("stub:check");
     expect(auditResult.exitCode).toBe(0);
-    expect(auditResult.stdout).toBe("stub:audit");
-    expect(scripts["harness:generate"]).toBe("tsx src/runway/cli.ts generate");
-    expect(scripts["harness:check"]).toBe("tsx src/runway/cli.ts check");
-    expect(scripts["harness:audit"]).toBe("tsx src/runway/cli.ts audit");
-    expect(scripts["validate:pr"]).toBe(
-      "npm run typecheck && npm run test && npm run harness:check && npm run harness:audit && npm run harness:inferential-review && npm run harness:scorecard",
-    );
+    expect(generateResult.stdout).toContain("\"command\":\"generate\"");
+    expect(checkResult.stdout).toContain("\"command\":\"check\"");
+    expect(auditResult.stdout).toContain("\"command\":\"audit\"");
 
     expect(readme).toContain("Harness Commands");
-    expect(readme).toContain("The CLI command surface now exists");
-    expect(readme).toContain("scaffolded placeholders");
-    expect(readme).toContain("return `stub:*` with exit code `0`");
     expect(readme).toContain("npm run harness:generate");
     expect(readme).toContain("npm run harness:check");
+    expect(readme).toContain("npm run harness:review");
     expect(readme).toContain("npm run harness:audit");
     expect(readme).toContain("npm run validate:pr");
+    expect(readme).not.toContain("stub:*");
 
     expect(agents).toContain("Start here");
     expect(agents).toContain("docs/agent/index.md");
     expect(agents).toContain("CLI command surface lives in `src/runway/cli.ts`");
-    expect(agents).toContain("graphify-out/` is generated later");
-    expect(agents).toContain("scaffolded CLI surface");
-    expect(agents).toContain("stubbed placeholders");
+    expect(agents).toContain("graphify-out/");
     expect(agents).toContain("npm run harness:check");
+    expect(agents).toContain("npm run harness:review");
     expect(agents).toContain("npm run harness:audit");
-    expect(agents).toContain("npm run harness:behavior");
     expect(agents).toContain("npm run validate:pr");
+    expect(agents).not.toContain("stub:*");
 
-    const indexSections = index.split("\n## Planned Later\n");
-    const architectureSections = architecture.split("\n## Planned Later\n");
-    const codeMapSections = codeMap.split("\n## Planned Later\n");
-    const testingSections = testing.split("\n## Manual Extras\n");
-
-    expect(index).toContain("Scope");
-    expect(index).toContain("[Scope](#scope)");
-    expect(index).toContain("[Boundaries](#boundaries)");
-    expect(index).toContain("[Planned Later](#planned-later)");
-    expect(index).toContain("[Common Validations](#common-validations)");
     expect(index).toContain("## Scope");
     expect(index).toContain("## Boundaries");
-    expect(index).toContain("## Planned Later");
     expect(index).toContain("## Common Validations");
-    expect(index).toContain("Current manual onboarding docs");
-    expect(index).toContain("Current CLI surface lives in `src/runway/cli.ts`");
-    expect(index).toContain("Generated docs will appear later in `graphify-out/`");
-    expect(index).toContain("Planned Later");
-    expect(index).toContain("docs/agent/");
-    expect(index).toContain("graphify-out/");
-    expect(index).toContain("src/runway/index.ts");
     expect(index).toContain("src/runway/cli.ts");
-    expect(index).toContain("npm run harness:check");
-    expect(index).toContain("scaffolded through `src/runway/cli.ts`");
-    expect(index).toContain("stub:check");
     expect(index).toContain("src/runway/harness/app-registry.ts");
     expect(index).toContain("src/runway/scenarios/inventory.ts");
-    expect(indexSections[1]).toContain("src/runway/harness/app-registry.ts");
-    expect(indexSections[1]).toContain("src/runway/scenarios/inventory.ts");
-    expect(indexSections[0]).toContain("Current manual onboarding docs");
-    expect(indexSections[0]).toContain("docs/agent/");
-    expect(indexSections[0]).toContain("graphify-out/");
-    expect(indexSections[0]).toContain("Current CLI surface lives in `src/runway/cli.ts`");
-    expect(indexSections[0]).not.toContain("src/runway/harness/app-registry.ts");
-    expect(indexSections[0]).not.toContain("src/runway/scenarios/inventory.ts");
-    expect(indexSections[1]).toContain("npm run harness:check");
-    expect(indexSections[1]).toContain("src/runway/harness/app-registry.ts");
-    expect(indexSections[1]).toContain("src/runway/scenarios/inventory.ts");
+    expect(index).toContain("npm run harness:check");
+    expect(index).toContain("npm run harness:review");
+    expect(index).not.toContain("stub:check");
 
-    expect(architecture).toContain("Entrypoints");
-    expect(architecture).toContain("[Entrypoints](#entrypoints)");
-    expect(architecture).toContain("[Edit Here, Not There](#edit-here-not-there)");
     expect(architecture).toContain("## Entrypoints");
     expect(architecture).toContain("## Edit Here, Not There");
-    expect(architecture).toContain("Current bootstrap entrypoint: `src/runway/index.ts`");
-    expect(architecture).toContain("Current CLI surface: `src/runway/cli.ts`");
-    expect(architecture).toContain("Planned Later");
-    expect(architecture).toContain("src/runway/index.ts");
     expect(architecture).toContain("src/runway/cli.ts");
     expect(architecture).toContain("src/runway/harness/app-registry.ts");
     expect(architecture).toContain("src/runway/scenarios/inventory.ts");
-    expect(architectureSections[0]).toContain("Entrypoints");
-    expect(architectureSections[0]).toContain("Current bootstrap entrypoint");
-    expect(architectureSections[0]).toContain("Current CLI surface: `src/runway/cli.ts`");
-    expect(architectureSections[0]).not.toContain("src/runway/harness/app-registry.ts");
-    expect(architectureSections[0]).not.toContain("src/runway/scenarios/inventory.ts");
-    expect(architectureSections[1]).not.toContain("src/runway/cli.ts");
-    expect(architectureSections[1]).toContain("src/runway/harness/app-registry.ts");
-    expect(architectureSections[1]).toContain("src/runway/scenarios/inventory.ts");
 
-    expect(testing).toContain("Validation Ladder");
-    expect(testing).toContain("[Validation Ladder](#validation-ladder)");
-    expect(testing).toContain("[Harness Repair](#harness-repair)");
-    expect(testing).toContain("[Manual Extras](#manual-extras)");
     expect(testing).toContain("## Validation Ladder");
     expect(testing).toContain("## Harness Repair");
-    expect(testing).toContain("## Manual Extras");
-    expect(testing).toContain("npm run validate:pr");
-    expect(testing).toContain("scaffolded CLI surface");
-    expect(testing).toContain("stub:*");
-    expect(testing).toContain("npm run harness:inferential-review");
-    expect(testing).toContain("npm run harness:scorecard");
-    expect(testing).toContain("Manual Extras");
+    expect(testing).toContain("npm run harness:generate");
+    expect(testing).toContain("npm run harness:check");
+    expect(testing).toContain("npm run harness:review");
+    expect(testing).toContain("npm run harness:audit");
     expect(testing).toContain("npm run harness:behavior");
-    expect(testing).toContain("extra manual check");
-    expect(testingSections[0]).toContain("Validation Ladder");
-    expect(testingSections[0]).toContain("npm run validate:pr");
-    expect(testingSections[0]).toContain("scaffolded CLI surface");
-    expect(testingSections[0]).toContain("stub:*");
-    expect(testingSections[0]).not.toContain("npm run harness:behavior");
-    expect(testingSections[1]).toContain("npm run harness:behavior");
+    expect(testing).toContain("npm run validate:pr");
+    expect(testing).not.toContain("stub:*");
 
-    expect(codeMap).toContain("Key Folders");
-    expect(codeMap).toContain("[Key Folders](#key-folders)");
-    expect(codeMap).toContain("[Planned Later](#planned-later)");
     expect(codeMap).toContain("## Key Folders");
-    expect(codeMap).toContain("## Planned Later");
-    expect(codeMap).toContain("Current source lives in `src/runway/index.ts`");
-    expect(codeMap).toContain("Current CLI surface lives in `src/runway/cli.ts`");
-    expect(codeMap).toContain("Planned Later");
     expect(codeMap).toContain("src/runway/index.ts");
     expect(codeMap).toContain("src/runway/cli.ts");
     expect(codeMap).toContain("src/runway/harness/");
@@ -164,21 +98,5 @@ describe("agent docs", () => {
     expect(codeMap).toContain("src/runway/agents/");
     expect(codeMap).toContain("src/runway/finance/");
     expect(codeMap).toContain("graphify-out/");
-    expect(codeMapSections[0]).toContain("Key Folders");
-    expect(codeMapSections[0]).toContain("Current source lives in `src/runway/index.ts`");
-    expect(codeMapSections[0]).toContain("Current CLI surface lives in `src/runway/cli.ts`");
-    expect(codeMapSections[0]).not.toContain("src/runway/agents/");
-    expect(codeMapSections[0]).not.toContain("src/runway/finance/");
-    expect(codeMapSections[1]).not.toContain("src/runway/cli.ts");
-    expect(codeMapSections[1]).toContain("src/runway/agents/");
-    expect(codeMapSections[1]).toContain("src/runway/finance/");
-    expect(codeMapSections[1]).toContain("graphify-out/");
-
-    expect(readme).not.toContain("planned for the next bootstrap tasks");
-    expect(agents).not.toContain("planned for the next bootstrap tasks");
-    expect(agents).toContain("graphify-out/");
-    expect(agents).toContain("Current onboarding docs live in `docs/agent/`");
-    expect(readme).toContain("stub:*");
-    expect(agents).toContain("stub:*");
   });
 });

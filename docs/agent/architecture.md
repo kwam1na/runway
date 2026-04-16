@@ -7,14 +7,11 @@
 
 ## Entrypoints
 
-- Current bootstrap entrypoint: `src/runway/index.ts`
-- Current CLI surface: `src/runway/cli.ts`
-
-## Planned Later
-
-- `src/runway/harness/app-registry.ts`
-- `src/runway/scenarios/inventory.ts`
+- Package entrypoint: `src/runway/index.ts`
+- CLI surface: `src/runway/cli.ts`
+- Registry source of truth: `src/runway/harness/app-registry.ts`
+- Scenario inventory: `src/runway/scenarios/inventory.ts`
 
 ## Edit Here, Not There
 
-- Edit source-of-truth registry and scenario files instead of generated JSON or index docs once those files exist.
+- Edit the registry and scenario source files instead of hand-editing generated docs or validation JSON.

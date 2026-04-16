@@ -9,12 +9,9 @@
 
 - Current source lives in `src/runway/index.ts`
 - Current CLI surface lives in `src/runway/cli.ts`
-- `docs/agent/`: local onboarding docs in this bootstrap checkout
-
-## Planned Later
-
-- `src/runway/harness/`: registry, generation, checks, review, audit, and scorecards
+- `src/runway/harness/`: registry-backed generation, check, review, and audit logic
 - `src/runway/scenarios/`: executable runtime scenario inventory
+- `docs/agent/`: local onboarding docs in this bootstrap checkout
 - `src/runway/agents/`: agent workflow logic
 - `src/runway/finance/`: finance-domain logic
 - `graphify-out/`: generated docs output
