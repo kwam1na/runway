@@ -24,6 +24,16 @@ This file is generated from the harness registry.
 - Behavior scenarios:
 - `cli-runway-assist`
 
+## interactive assist logic
+
+- Path prefixes:
+- `src/runway/interactive-assist.ts`
+- Commands:
+- `npm run typecheck`
+- `npm run test`
+- Behavior scenarios:
+- `cli-runway-assist`
+
 ## cli and harness logic
 
 - Path prefixes:

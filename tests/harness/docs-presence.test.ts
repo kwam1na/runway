@@ -18,6 +18,7 @@ describe("agent docs", () => {
     };
 
     expect(existsSync(resolve(root, "src/runway/cli.ts"))).toBe(true);
+    expect(existsSync(resolve(root, "src/runway/interactive-assist.ts"))).toBe(true);
     expect(existsSync(resolve(root, "src/runway/index.ts"))).toBe(true);
     expect(existsSync(resolve(root, "docs/agent"))).toBe(true);
     expect(existsSync(resolve(root, "docs/agent/analysis-workflow.md"))).toBe(true);
@@ -77,6 +78,7 @@ describe("agent docs", () => {
     expect(index).toContain("docs/agent/analysis-workflow.md");
     expect(index).toContain("analyze");
     expect(index).toContain("assist");
+    expect(index).toContain("interactive TTY");
     expect(index).toContain("src/runway/agents");
     expect(index).toContain("src/runway/harness/app-registry.ts");
     expect(index).toContain("src/runway/scenarios/inventory.ts");
@@ -89,6 +91,8 @@ describe("agent docs", () => {
     expect(analysisWorkflow).toContain("## Boundaries");
     expect(analysisWorkflow).toContain("analyze <profile-path>");
     expect(analysisWorkflow).toContain("assist <profile-path> [answer-patch-path]");
+    expect(analysisWorkflow).toContain("Interactive TTY mode");
+    expect(analysisWorkflow).toContain("<profile-path>.bak");
     expect(analysisWorkflow).toContain("runAgentWorkflow");
     expect(analysisWorkflow).toContain("mergeFinancialProfilePatch");
     expect(analysisWorkflow).toContain("LocalFinancialProfileInput");
@@ -119,6 +123,7 @@ describe("agent docs", () => {
     expect(testing).toContain("npm run harness:audit");
     expect(testing).toContain("npm run harness:behavior");
     expect(testing).toContain("npm run validate:pr");
+    expect(testing).toContain("src/runway/interactive-assist.ts");
     expect(testing).not.toContain("stub:*");
 
     expect(codeMap).toContain("## Key Folders");

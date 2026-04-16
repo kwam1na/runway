@@ -19,6 +19,14 @@ This file is generated from the harness registry.
 - `npm run typecheck`
 - `npm run test`
 
+## interactive assist logic
+
+- Path prefixes:
+- `src/runway/interactive-assist.ts`
+- Commands:
+- `npm run typecheck`
+- `npm run test`
+
 ## cli and harness logic
 
 - Path prefixes:

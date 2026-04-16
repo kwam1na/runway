@@ -64,6 +64,22 @@ describe("registry", () => {
       repoPath: "src/runway",
       archetype: "library",
     });
+    expect(harnessTargets[0].keyFolderGroups).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: "interactive assist",
+          paths: ["src/runway/interactive-assist.ts"],
+        }),
+      ]),
+    );
+    expect(harnessTargets[0].validationSurfaces).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: "interactive assist logic",
+          pathPrefixes: ["src/runway/interactive-assist.ts"],
+        }),
+      ]),
+    );
   });
 
   it("defines the bootstrap CLI scenario", () => {

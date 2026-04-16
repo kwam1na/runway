@@ -14,7 +14,7 @@ This starts with `npm run validate:pr` and adds the registry-refresh steps you s
 2. `npm run test`
 3. `npm run harness:generate`
 4. `npm run harness:check`
-5. `npm run harness:review -- src/runway/cli.ts`
+5. `npm run harness:review -- src/runway/interactive-assist.ts`
 6. `npm run harness:audit`
 7. `npm run harness:inferential-review`
 8. `npm run harness:scorecard`
@@ -28,3 +28,4 @@ This starts with `npm run validate:pr` and adds the registry-refresh steps you s
 
 - `npm run harness:behavior` is an extra manual check, not part of `validate:pr`.
 - When agent workflow docs change, rerun `npm run harness:generate` so `docs/agent/analysis-workflow.md` coverage is reflected in the generated validation outputs.
+- Interactive CLI prompting is covered by focused Vitest suites under `tests/agents/` rather than the deterministic behavior scenario runner.

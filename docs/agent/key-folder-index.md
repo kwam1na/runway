@@ -6,6 +6,10 @@ This file is generated from the harness registry.
 
 - `src/runway/cli.ts`
 
+## interactive assist
+
+- `src/runway/interactive-assist.ts`
+
 ## finance domain logic
 
 - `src/runway/finance`

@@ -15,9 +15,10 @@ Use the shared finance contract and runner for every agent integration so that i
 2. Keep the working profile in local-only storage such as a JSON file on disk.
 3. Run the minimal agent loop through `runAgentWorkflow` or `assist <profile-path> [answer-patch-path]`.
 4. If validation fails, surface each `ValidationIssue` back to the user with its `path`, `message`, and optional `question`.
-5. Save only the user-confirmed corrections into a local answer patch and rerun the same workflow.
-6. When the workflow reaches `ready`, present the shared `report` and `result` output instead of restating calculation rules inside the wrapper.
-7. Keep any extra agent-specific phrasing outside the planning logic.
+5. In non-interactive contexts, save only the user-confirmed corrections into a local answer patch and rerun the same workflow.
+6. In a real TTY without an answer patch, let `assist` ask the next validator-driven question, write the accepted answer directly back into the profile file, and rerun until the workflow reaches `ready`.
+7. When the workflow reaches `ready`, present the shared `report` and `result` output instead of restating calculation rules inside the wrapper.
+8. Keep any extra agent-specific phrasing outside the planning logic.
 
 Happy path:
 
@@ -68,10 +69,22 @@ Minimal local agent loop:
 tsx src/runway/cli.ts assist <profile-path> [answer-patch-path]
 ```
 
-The `assist` command loads the current local profile, optionally merges a local answer patch, and returns one of two deterministic states:
+The `assist` command supports two wrapper modes that share the same validation and planning engine:
+
+- Non-interactive mode: loads the current local profile, optionally merges a local answer patch, and returns one of two deterministic JSON states.
+- Interactive TTY mode: if no patch file is provided and both stdin and stdout are TTYs, asks the next validator-driven question, writes the accepted answer directly back into the profile file, and reruns until the profile is complete.
+
+The non-interactive mode returns one of two deterministic states:
 
 - `needs-input`: includes `validationIssues` plus `followUpQuestions` for the exact missing answers to ask next.
 - `ready`: includes the merged profile, shared `result`, and shared Markdown `report`.
+
+The interactive mode keeps the profile JSON file as the live session state:
+
+- Accepted numeric answers currently cover debt APR and debt minimum-payment follow-ups.
+- Accepted boolean answers currently cover `income_assumptions.income_is_confirmed`.
+- Invalid numeric or boolean answers reprompt without mutating the file.
+- Before the first accepted interactive write, the CLI creates a one-time `<profile-path>.bak` snapshot and leaves any existing backup untouched.
 
 If a wrapper needs to bypass the higher-level loop, the lower-level shared finance entry points `analyzeProfilePayload` and `buildRunwayPlan` remain available behind the agent workflow layer.
 
