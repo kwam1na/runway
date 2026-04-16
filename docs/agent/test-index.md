@@ -32,6 +32,14 @@ This file is generated from the harness registry.
 - `npm run harness:generate`
 - `npm run harness:check`
 
+## finance domain logic
+
+- Path prefixes:
+- `src/runway/finance`
+- Commands:
+- `npm run typecheck`
+- `npm run test`
+
 ## harness workflow
 
 - Path prefixes:

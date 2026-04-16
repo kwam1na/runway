@@ -110,6 +110,23 @@
           "behaviorScenarios": []
         },
         {
+          "name": "finance domain logic",
+          "pathPrefixes": [
+            "src/runway/finance"
+          ],
+          "commands": [
+            {
+              "kind": "npm",
+              "script": "typecheck"
+            },
+            {
+              "kind": "npm",
+              "script": "test"
+            }
+          ],
+          "behaviorScenarios": []
+        },
+        {
           "name": "harness workflow",
           "pathPrefixes": [
             ".github/workflows/harness.yml"
@@ -282,6 +299,23 @@
         {
           "kind": "npm",
           "script": "harness:check"
+        }
+      ],
+      "behaviorScenarios": []
+    },
+    {
+      "name": "finance domain logic",
+      "pathPrefixes": [
+        "src/runway/finance"
+      ],
+      "commands": [
+        {
+          "kind": "npm",
+          "script": "typecheck"
+        },
+        {
+          "kind": "npm",
+          "script": "test"
         }
       ],
       "behaviorScenarios": []

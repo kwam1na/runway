@@ -36,6 +36,16 @@ This file is generated from the harness registry.
 - Behavior scenarios:
 - none
 
+## finance domain logic
+
+- Path prefixes:
+- `src/runway/finance`
+- Commands:
+- `npm run typecheck`
+- `npm run test`
+- Behavior scenarios:
+- none
+
 ## harness workflow
 
 - Path prefixes:
