@@ -124,36 +124,91 @@ async function askDebtLabel(
   return answer || defaultLabel;
 }
 
-async function bootstrapProfile(
-  profilePath: string,
+function cloneProfile(profile: LocalFinancialProfileInput): LocalFinancialProfileInput {
+  return {
+    ...profile,
+    cash_position: profile.cash_position ? { ...profile.cash_position } : undefined,
+    monthly_obligations: profile.monthly_obligations ? { ...profile.monthly_obligations } : undefined,
+    debts: profile.debts?.map((debt) => ({ ...debt })),
+    income_assumptions: profile.income_assumptions ? { ...profile.income_assumptions } : undefined,
+    planning_preferences: profile.planning_preferences ? { ...profile.planning_preferences } : undefined,
+  };
+}
+
+async function completeCashPositionStage(
+  profile: LocalFinancialProfileInput,
   ask: InteractiveAssistOptions["ask"],
 ): Promise<LocalFinancialProfileInput> {
-  const availableCash = await askNonNegativeNumber(
-    ask,
-    "How much available cash can runway use right now?",
-  );
-  const reservedCash = await askNonNegativeNumber(
-    ask,
-    "How much cash should stay reserved?",
-  );
-  const severanceTotal = await askNonNegativeNumber(
-    ask,
-    "How much severance cash is available?",
-  );
-  const essentials = await askNonNegativeNumber(
-    ask,
-    "What are the essential monthly obligations?",
-  );
-  const discretionary = await askNonNegativeNumber(
-    ask,
-    "What are the discretionary monthly obligations? Enter 0 if none.",
-  );
-  const debtCount = await askNonNegativeInteger(
-    ask,
-    "How many debts should runway track?",
-  );
+  const cashPosition = { ...profile.cash_position };
 
+  if (cashPosition.available_cash === undefined) {
+    cashPosition.available_cash = await askNonNegativeNumber(
+      ask,
+      "How much available cash can runway use right now?",
+    );
+  }
+
+  if (cashPosition.reserved_cash === undefined) {
+    cashPosition.reserved_cash = await askNonNegativeNumber(
+      ask,
+      "How much cash should stay reserved?",
+    );
+  }
+
+  if (cashPosition.severance_total === undefined) {
+    cashPosition.severance_total = await askNonNegativeNumber(
+      ask,
+      "How much severance cash is available?",
+    );
+  }
+
+  return {
+    ...profile,
+    cash_position: {
+      ...cashPosition,
+    },
+  };
+}
+
+async function completeMonthlyObligationsStage(
+  profile: LocalFinancialProfileInput,
+  ask: InteractiveAssistOptions["ask"],
+): Promise<LocalFinancialProfileInput> {
+  const monthlyObligations = { ...profile.monthly_obligations };
+
+  if (monthlyObligations.essentials === undefined) {
+    monthlyObligations.essentials = await askNonNegativeNumber(
+      ask,
+      "What are the essential monthly obligations?",
+    );
+  }
+
+  if (monthlyObligations.discretionary === undefined) {
+    monthlyObligations.discretionary = await askNonNegativeNumber(
+      ask,
+      "What are the discretionary monthly obligations? Enter 0 if none.",
+    );
+  }
+
+  return {
+    ...profile,
+    monthly_obligations: {
+      ...monthlyObligations,
+    },
+  };
+}
+
+async function completeDebtCollectionStage(
+  profile: LocalFinancialProfileInput,
+  ask: InteractiveAssistOptions["ask"],
+): Promise<LocalFinancialProfileInput> {
+  if (profile.debts !== undefined) {
+    return profile;
+  }
+
+  const debtCount = await askNonNegativeInteger(ask, "How many debts should runway track?");
   const debts: NonNullable<LocalFinancialProfileInput["debts"]> = [];
+
   for (let index = 0; index < debtCount; index += 1) {
     const label = await askDebtLabel(ask, index);
     const balance = await askNonNegativeNumber(
@@ -178,56 +233,105 @@ async function bootstrapProfile(
     });
   }
 
-  const expectedMonthlyIncome = await askNonNegativeNumber(
-    ask,
-    "What expected monthly income should runway include before confirmation? Enter 0 if none.",
-  );
-  const incomeIsConfirmed =
-    expectedMonthlyIncome > 0
-      ? await askBoolean(
-          ask,
-          "Is the expected monthly income confirmed enough to include in runway planning?",
-        )
-      : false;
-
-  const profile: LocalFinancialProfileInput = {
-    cash_position: {
-      available_cash: availableCash,
-      reserved_cash: reservedCash,
-      severance_total: severanceTotal,
-    },
-    monthly_obligations: {
-      essentials,
-      discretionary,
-    },
+  return {
+    ...profile,
     debts,
+  };
+}
+
+async function completeIncomeAssumptionsStage(
+  profile: LocalFinancialProfileInput,
+  ask: InteractiveAssistOptions["ask"],
+): Promise<LocalFinancialProfileInput> {
+  const incomeAssumptions = { ...profile.income_assumptions };
+  const askedExpectedMonthlyIncome = incomeAssumptions.expected_monthly_income === undefined;
+
+  if (askedExpectedMonthlyIncome) {
+    incomeAssumptions.expected_monthly_income = await askNonNegativeNumber(
+      ask,
+      "What expected monthly income should runway include before confirmation? Enter 0 if none.",
+    );
+  }
+
+  const expectedMonthlyIncome = incomeAssumptions.expected_monthly_income;
+
+  if (
+    expectedMonthlyIncome !== undefined &&
+    expectedMonthlyIncome > 0 &&
+    incomeAssumptions.income_is_confirmed === undefined
+  ) {
+    incomeAssumptions.income_is_confirmed = await askBoolean(
+      ask,
+      "Is the expected monthly income confirmed enough to include in runway planning?",
+    );
+  } else if (
+    askedExpectedMonthlyIncome &&
+    expectedMonthlyIncome === 0 &&
+    incomeAssumptions.income_is_confirmed === undefined
+  ) {
+    incomeAssumptions.income_is_confirmed = false;
+  }
+
+  return {
+    ...profile,
     income_assumptions: {
-      expected_monthly_income: expectedMonthlyIncome,
-      income_is_confirmed: incomeIsConfirmed,
+      ...incomeAssumptions,
     },
+  };
+}
+
+function withBootstrapPlanningPreferences(
+  profile: LocalFinancialProfileInput,
+): LocalFinancialProfileInput {
+  return {
+    ...profile,
     planning_preferences: {
       strategy: "runway-first",
       runway_floor_months: DEFAULT_RUNWAY_FLOOR_MONTHS,
       prioritize_interest_savings: false,
+      ...profile.planning_preferences,
     },
   };
-
-  await writeProfile(profilePath, profile);
-  return profile;
 }
 
-async function readOrBootstrapProfile(
-  profilePath: string,
+async function bootstrapProfileStages(
+  profile: LocalFinancialProfileInput,
   ask: InteractiveAssistOptions["ask"],
 ): Promise<LocalFinancialProfileInput> {
+  const needsBootstrap =
+    profile.cash_position?.available_cash === undefined ||
+    profile.cash_position?.reserved_cash === undefined ||
+    profile.cash_position?.severance_total === undefined ||
+    profile.monthly_obligations?.essentials === undefined ||
+    profile.monthly_obligations?.discretionary === undefined ||
+    profile.debts === undefined ||
+    profile.income_assumptions?.expected_monthly_income === undefined;
+  let nextProfile = cloneProfile(profile);
+  nextProfile = await completeCashPositionStage(nextProfile, ask);
+  nextProfile = await completeMonthlyObligationsStage(nextProfile, ask);
+  nextProfile = await completeDebtCollectionStage(nextProfile, ask);
+  nextProfile = await completeIncomeAssumptionsStage(nextProfile, ask);
+
+  return needsBootstrap ? withBootstrapPlanningPreferences(nextProfile) : nextProfile;
+}
+
+async function readOrInitializeProfile(
+  profilePath: string,
+): Promise<{ exists: true; profile: LocalFinancialProfileInput } | { exists: false; profile: {} }> {
   try {
-    return await readProfile(profilePath);
+    return {
+      exists: true,
+      profile: await readProfile(profilePath),
+    };
   } catch (error) {
     if (!isMissingFileError(error)) {
       throw error;
     }
 
-    return bootstrapProfile(profilePath, ask);
+    return {
+      exists: false,
+      profile: {},
+    };
   }
 }
 
@@ -341,7 +445,19 @@ function applyAnswer(
 export async function runInteractiveAssist(
   options: InteractiveAssistOptions,
 ): Promise<AgentWorkflowOutcome> {
-  let profile = await readOrBootstrapProfile(options.profilePath, options.ask);
+  const initialProfileState = await readOrInitializeProfile(options.profilePath);
+  let profile = await bootstrapProfileStages(initialProfileState.profile, options.ask);
+
+  if (
+    !initialProfileState.exists ||
+    JSON.stringify(profile) !== JSON.stringify(initialProfileState.profile)
+  ) {
+    if (initialProfileState.exists) {
+      await ensureBackup(options.profilePath);
+    }
+
+    await writeProfile(options.profilePath, profile);
+  }
 
   if (options.statementPaths && options.statementPaths.length > 0) {
     const reviewedProfile = await ingestStatementsIntoProfile({
