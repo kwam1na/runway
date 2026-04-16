@@ -20,6 +20,14 @@ function writeProfileFile(filename: string, payload: unknown): string {
   return profilePath;
 }
 
+function writeRawProfileFile(filename: string, contents: string): string {
+  const dir = mkdtempSync(join(tmpdir(), "runway-analysis-"));
+  tempDirs.push(dir);
+  const profilePath = resolve(dir, filename);
+  writeFileSync(profilePath, contents, "utf8");
+  return profilePath;
+}
+
 describe("local analysis runner", () => {
   it("analyzes a valid profile through the CLI and emits both result data and a markdown report", async () => {
     const profilePath = writeProfileFile("valid-profile.json", {
@@ -97,6 +105,20 @@ describe("local analysis runner", () => {
     expect(result.stdout).toBe("");
     expect(result.stderr).toContain("debts[0].minimum_payment");
     expect(result.stderr).not.toContain("## Snapshot");
+  });
+
+  it("returns structured validation feedback for malformed json profile files", async () => {
+    const profilePath = writeRawProfileFile(
+      "malformed-profile.json",
+      '{ "cash_position": { "available_cash": 18000 }',
+    );
+
+    const result = await runCli(["analyze", profilePath]);
+
+    expect(result.exitCode).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain("$: Profile file must contain valid JSON.");
+    expect(result.stderr).not.toContain("Unexpected end of JSON input");
   });
 
   it("produces materially identical output for repeated analysis of the same unchanged profile", async () => {

@@ -71,7 +71,22 @@ function buildMarkdownReport(result: PlannerResult): string {
 
 export async function analyzeProfileFile(profilePath: string): Promise<AnalysisOutcome> {
   const raw = await readFile(profilePath, "utf8");
-  const payload = JSON.parse(raw) as LocalFinancialProfileInput;
+  let payload: LocalFinancialProfileInput;
+
+  try {
+    payload = JSON.parse(raw) as LocalFinancialProfileInput;
+  } catch {
+    return {
+      ok: false,
+      errors: [
+        {
+          path: "$",
+          message: "Profile file must contain valid JSON.",
+        },
+      ],
+    };
+  }
+
   return analyzeProfilePayload(payload);
 }
 
