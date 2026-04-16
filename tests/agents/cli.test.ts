@@ -5,13 +5,21 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { runInteractiveAssist } from "../../src/runway/interactive-assist.js";
 import { runCli } from "../../src/runway/cli.js";
 
-vi.mock("../../src/runway/interactive-assist.js", () => ({
-  runInteractiveAssist: vi.fn(),
-}));
+vi.mock("../../src/runway/interactive-assist.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../src/runway/interactive-assist.js")>();
+
+  return {
+    ...actual,
+    runInteractiveAssist: vi.fn(),
+  };
+});
 
 const tempDirs: string[] = [];
+const originalCwd = process.cwd();
 
 afterEach(() => {
+  process.chdir(originalCwd);
+
   for (const dir of tempDirs.splice(0)) {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -49,6 +57,84 @@ function restoreTtyState(
 }
 
 describe("agent workflow cli", () => {
+  it("creates a default profile path for interactive assist when none is provided", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "runway-agent-cli-cwd-"));
+    tempDirs.push(dir);
+    process.chdir(dir);
+
+    const stdinDescriptor = Object.getOwnPropertyDescriptor(process.stdin, "isTTY");
+    const stdoutDescriptor = Object.getOwnPropertyDescriptor(process.stdout, "isTTY");
+
+    Object.defineProperty(process.stdin, "isTTY", { value: true, configurable: true });
+    Object.defineProperty(process.stdout, "isTTY", { value: true, configurable: true });
+
+    vi.mocked(runInteractiveAssist).mockResolvedValue({
+      status: "ready",
+      profile: {},
+      analysis: {
+        ok: true,
+        profile: {} as never,
+        result: {
+          snapshot: {
+            liquid_cash: 1,
+            monthly_burn: 1,
+            runway_months: 1,
+          },
+          recommended_immediate_actions: [],
+          monthly_plan: [],
+          runway_estimate: {
+            months: 1,
+            floor_months: 6,
+            floor_status: "meets-floor",
+          },
+          assumptions: [],
+          risk_flags: [],
+        },
+        report: "# Runway Analysis",
+      },
+      result: {
+        snapshot: {
+          liquid_cash: 1,
+          monthly_burn: 1,
+          runway_months: 1,
+        },
+        recommended_immediate_actions: [],
+        monthly_plan: [],
+        runway_estimate: {
+          months: 1,
+          floor_months: 6,
+          floor_status: "meets-floor",
+        },
+        assumptions: [],
+        risk_flags: [],
+      },
+      report: "# Runway Analysis",
+    });
+
+    try {
+      const result = await runCli(["assist"]);
+      const payload = JSON.parse(result.stdout) as {
+        command: string;
+        status: string;
+        profilePath: string;
+      };
+
+      expect(result.exitCode).toBe(0);
+      expect(payload).toMatchObject({
+        command: "assist",
+        status: "ready",
+      });
+      expect(payload.profilePath).toMatch(/runway-profile\.json$/);
+      expect(runInteractiveAssist).toHaveBeenCalledWith({
+        profilePath: payload.profilePath,
+        ask: expect.any(Function),
+        isInteractive: true,
+      });
+    } finally {
+      restoreTtyState(stdinDescriptor, stdoutDescriptor);
+    }
+  });
+
   it("delegates to interactive assist in a tty session without a patch file", async () => {
     const profilePath = writeJsonFile("partial-profile.json", {
       cash_position: {
@@ -193,6 +279,26 @@ describe("agent workflow cli", () => {
     }
   });
 
+  it("requires either a profile path or an interactive tty session", async () => {
+    const stdinDescriptor = Object.getOwnPropertyDescriptor(process.stdin, "isTTY");
+    const stdoutDescriptor = Object.getOwnPropertyDescriptor(process.stdout, "isTTY");
+
+    Object.defineProperty(process.stdin, "isTTY", { value: false, configurable: true });
+    Object.defineProperty(process.stdout, "isTTY", { value: false, configurable: true });
+
+    try {
+      const result = await runCli(["assist"]);
+
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toBe(
+        "Usage: assist [profile-path] [answer-patch-path]\nOmit profile-path only in an interactive TTY session.",
+      );
+      expect(runInteractiveAssist).not.toHaveBeenCalled();
+    } finally {
+      restoreTtyState(stdinDescriptor, stdoutDescriptor);
+    }
+  });
+
   it("merges a local answer patch file before rerunning the workflow", async () => {
     const profilePath = writeJsonFile("partial-profile.json", {
       cash_position: {
@@ -299,12 +405,21 @@ describe("agent workflow cli", () => {
 
   it("returns a clear error for malformed profile files", async () => {
     const profilePath = writeRawFile("partial-profile.json", '{ "cash_position": ');
+    const stdinDescriptor = Object.getOwnPropertyDescriptor(process.stdin, "isTTY");
+    const stdoutDescriptor = Object.getOwnPropertyDescriptor(process.stdout, "isTTY");
 
-    const result = await runCli(["assist", profilePath]);
+    Object.defineProperty(process.stdin, "isTTY", { value: false, configurable: true });
+    Object.defineProperty(process.stdout, "isTTY", { value: false, configurable: true });
 
-    expect(result.exitCode).toBe(1);
-    expect(result.stdout).toBe("");
-    expect(result.stderr).toBe("Profile file must contain valid JSON.");
+    try {
+      const result = await runCli(["assist", profilePath]);
+
+      expect(result.exitCode).toBe(1);
+      expect(result.stdout).toBe("");
+      expect(result.stderr).toBe("Profile file must contain valid JSON.");
+    } finally {
+      restoreTtyState(stdinDescriptor, stdoutDescriptor);
+    }
   });
 
   it("returns a clear error for malformed answer patch files", async () => {

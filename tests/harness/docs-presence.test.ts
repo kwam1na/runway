@@ -90,7 +90,8 @@ describe("agent docs", () => {
     expect(analysisWorkflow).toContain("## Thin Wrapper Pattern");
     expect(analysisWorkflow).toContain("## Boundaries");
     expect(analysisWorkflow).toContain("analyze <profile-path>");
-    expect(analysisWorkflow).toContain("assist <profile-path> [answer-patch-path]");
+    expect(analysisWorkflow).toContain("assist [profile-path] [answer-patch-path]");
+    expect(analysisWorkflow).toContain("runway-profile.json");
     expect(analysisWorkflow).toContain("Interactive TTY mode");
     expect(analysisWorkflow).toContain("<profile-path>.bak");
     expect(analysisWorkflow).toContain("runAgentWorkflow");

@@ -1,4 +1,5 @@
 import { access, copyFile, readFile, writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import { runAgentWorkflow, type AgentWorkflowOutcome } from "./agents/index.js";
 import type { LocalFinancialProfileInput } from "./finance/index.js";
 
@@ -7,6 +8,8 @@ export type InteractiveAssistOptions = {
   ask(question: string): Promise<string>;
   isInteractive: boolean;
 };
+
+const DEFAULT_RUNWAY_FLOOR_MONTHS = 6;
 
 type AnswerApplication =
   | {
@@ -62,6 +65,185 @@ function parseBooleanAnswer(answer: string): boolean | undefined {
   }
 
   return undefined;
+}
+
+function isMissingFileError(error: unknown): boolean {
+  return error instanceof Error && "code" in error && (error as NodeJS.ErrnoException).code === "ENOENT";
+}
+
+async function askNonNegativeNumber(
+  ask: InteractiveAssistOptions["ask"],
+  question: string,
+): Promise<number> {
+  for (;;) {
+    const value = parseNumericAnswer(await ask(question));
+
+    if (value !== undefined && value >= 0) {
+      return value;
+    }
+  }
+}
+
+async function askNonNegativeInteger(
+  ask: InteractiveAssistOptions["ask"],
+  question: string,
+): Promise<number> {
+  for (;;) {
+    const value = parseNumericAnswer(await ask(question));
+
+    if (value !== undefined && value >= 0 && Number.isInteger(value)) {
+      return value;
+    }
+  }
+}
+
+async function askBoolean(
+  ask: InteractiveAssistOptions["ask"],
+  question: string,
+): Promise<boolean> {
+  for (;;) {
+    const value = parseBooleanAnswer(await ask(question));
+
+    if (value !== undefined) {
+      return value;
+    }
+  }
+}
+
+async function askDebtLabel(
+  ask: InteractiveAssistOptions["ask"],
+  index: number,
+): Promise<string> {
+  const defaultLabel = `Debt ${index + 1}`;
+  const answer = (await ask(
+    `What should runway call debt ${index + 1}? Leave blank to use "${defaultLabel}".`,
+  )).trim();
+
+  return answer || defaultLabel;
+}
+
+async function bootstrapProfile(
+  profilePath: string,
+  ask: InteractiveAssistOptions["ask"],
+): Promise<LocalFinancialProfileInput> {
+  const availableCash = await askNonNegativeNumber(
+    ask,
+    "How much available cash can runway use right now?",
+  );
+  const reservedCash = await askNonNegativeNumber(
+    ask,
+    "How much cash should stay reserved?",
+  );
+  const severanceTotal = await askNonNegativeNumber(
+    ask,
+    "How much severance cash is available?",
+  );
+  const essentials = await askNonNegativeNumber(
+    ask,
+    "What are the essential monthly obligations?",
+  );
+  const discretionary = await askNonNegativeNumber(
+    ask,
+    "What are the discretionary monthly obligations? Enter 0 if none.",
+  );
+  const debtCount = await askNonNegativeInteger(
+    ask,
+    "How many debts should runway track?",
+  );
+
+  const debts: NonNullable<LocalFinancialProfileInput["debts"]> = [];
+  for (let index = 0; index < debtCount; index += 1) {
+    const label = await askDebtLabel(ask, index);
+    const balance = await askNonNegativeNumber(
+      ask,
+      `What is the current balance for debt "${label}"?`,
+    );
+    const apr = await askNonNegativeNumber(
+      ask,
+      `What APR should runway use for debt "${label}"?`,
+    );
+    const minimumPayment = await askNonNegativeNumber(
+      ask,
+      `What is the minimum monthly payment for debt "${label}"?`,
+    );
+
+    debts.push({
+      id: `debt-${index + 1}`,
+      label,
+      balance,
+      apr,
+      minimum_payment: minimumPayment,
+    });
+  }
+
+  const expectedMonthlyIncome = await askNonNegativeNumber(
+    ask,
+    "What expected monthly income should runway include before confirmation? Enter 0 if none.",
+  );
+  const incomeIsConfirmed =
+    expectedMonthlyIncome > 0
+      ? await askBoolean(
+          ask,
+          "Is the expected monthly income confirmed enough to include in runway planning?",
+        )
+      : false;
+
+  const profile: LocalFinancialProfileInput = {
+    cash_position: {
+      available_cash: availableCash,
+      reserved_cash: reservedCash,
+      severance_total: severanceTotal,
+    },
+    monthly_obligations: {
+      essentials,
+      discretionary,
+    },
+    debts,
+    income_assumptions: {
+      expected_monthly_income: expectedMonthlyIncome,
+      income_is_confirmed: incomeIsConfirmed,
+    },
+    planning_preferences: {
+      strategy: "runway-first",
+      runway_floor_months: DEFAULT_RUNWAY_FLOOR_MONTHS,
+      prioritize_interest_savings: false,
+    },
+  };
+
+  await writeProfile(profilePath, profile);
+  return profile;
+}
+
+async function readOrBootstrapProfile(
+  profilePath: string,
+  ask: InteractiveAssistOptions["ask"],
+): Promise<LocalFinancialProfileInput> {
+  try {
+    return await readProfile(profilePath);
+  } catch (error) {
+    if (!isMissingFileError(error)) {
+      throw error;
+    }
+
+    return bootstrapProfile(profilePath, ask);
+  }
+}
+
+export async function resolveDefaultProfilePath(cwd = process.cwd()): Promise<string> {
+  const baseName = "runway-profile";
+
+  for (let suffix = 0; suffix < 10_000; suffix += 1) {
+    const filename = suffix === 0 ? `${baseName}.json` : `${baseName}-${suffix + 1}.json`;
+    const candidatePath = resolve(cwd, filename);
+
+    try {
+      await access(candidatePath);
+    } catch {
+      return candidatePath;
+    }
+  }
+
+  throw new Error("Unable to find an available default profile path.");
 }
 
 function applyDebtAnswer(
@@ -144,7 +326,7 @@ function applyAnswer(
 export async function runInteractiveAssist(
   options: InteractiveAssistOptions,
 ): Promise<AgentWorkflowOutcome> {
-  let profile = await readProfile(options.profilePath);
+  let profile = await readOrBootstrapProfile(options.profilePath, options.ask);
   let outcome = runAgentWorkflow(profile);
 
   if (!options.isInteractive || outcome.status !== "needs-input") {

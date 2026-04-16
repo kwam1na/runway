@@ -13,7 +13,7 @@ Use the shared finance contract and runner for every agent integration so that i
 
 1. Gather user inputs into a `LocalFinancialProfileInput` payload that preserves the shared field names.
 2. Keep the working profile in local-only storage such as a JSON file on disk.
-3. Run the minimal agent loop through `runAgentWorkflow` or `assist <profile-path> [answer-patch-path]`.
+3. Run the minimal agent loop through `runAgentWorkflow` or `assist [profile-path] [answer-patch-path]`.
 4. If validation fails, surface each `ValidationIssue` back to the user with its `path`, `message`, and optional `question`.
 5. In non-interactive contexts, save only the user-confirmed corrections into a local answer patch and rerun the same workflow.
 6. In a real TTY without an answer patch, let `assist` ask the next validator-driven question, write the accepted answer directly back into the profile file, and rerun until the workflow reaches `ready`.
@@ -66,13 +66,14 @@ The runner returns structured JSON with a `result` payload plus a Markdown `repo
 Minimal local agent loop:
 
 ```bash
-tsx src/runway/cli.ts assist <profile-path> [answer-patch-path]
+tsx src/runway/cli.ts assist [profile-path] [answer-patch-path]
 ```
 
 The `assist` command supports two wrapper modes that share the same validation and planning engine:
 
 - Non-interactive mode: loads the current local profile, optionally merges a local answer patch, and returns one of two deterministic JSON states.
 - Interactive TTY mode: if no patch file is provided and both stdin and stdout are TTYs, asks the next validator-driven question, writes the accepted answer directly back into the profile file, and reruns until the profile is complete.
+- Pathless interactive mode: if `assist` is run in a real TTY with no profile path, the CLI creates a new local profile at `./runway-profile.json` or the next available `./runway-profile-<n>.json`, collects the initial intake interactively, and then continues through the same validator-driven loop.
 
 The non-interactive mode returns one of two deterministic states:
 

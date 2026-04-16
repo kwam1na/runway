@@ -233,4 +233,59 @@ describe("interactive assist", () => {
     expect(JSON.parse(readFileSync(backupPath, "utf8"))).toEqual(originalProfile);
     expect(outcome.status).toBe("ready");
   });
+
+  it("bootstraps a new profile file from interactive intake when the file does not exist", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "runway-interactive-bootstrap-"));
+    tempDirs.push(dir);
+    const profilePath = resolve(dir, "runway-profile.json");
+    const prompts: string[] = [];
+    const answers = ["18000", "2500", "12000", "3200", "450", "0", "0"];
+
+    const outcome = await runInteractiveAssist({
+      profilePath,
+      ask(question) {
+        prompts.push(question);
+        const answer = answers.shift();
+
+        if (!answer) {
+          throw new Error(`Unexpected question: ${question}`);
+        }
+
+        return Promise.resolve(answer);
+      },
+      isInteractive: true,
+    });
+
+    expect(prompts).toEqual([
+      "How much available cash can runway use right now?",
+      "How much cash should stay reserved?",
+      "How much severance cash is available?",
+      "What are the essential monthly obligations?",
+      "What are the discretionary monthly obligations? Enter 0 if none.",
+      "How many debts should runway track?",
+      "What expected monthly income should runway include before confirmation? Enter 0 if none.",
+    ]);
+    expect(JSON.parse(readFileSync(profilePath, "utf8"))).toEqual({
+      cash_position: {
+        available_cash: 18000,
+        reserved_cash: 2500,
+        severance_total: 12000,
+      },
+      monthly_obligations: {
+        essentials: 3200,
+        discretionary: 450,
+      },
+      debts: [],
+      income_assumptions: {
+        expected_monthly_income: 0,
+        income_is_confirmed: false,
+      },
+      planning_preferences: {
+        strategy: "runway-first",
+        runway_floor_months: 6,
+        prioritize_interest_savings: false,
+      },
+    });
+    expect(outcome.status).toBe("ready");
+  });
 });

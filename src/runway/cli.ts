@@ -18,7 +18,7 @@ import { selectValidationsForFiles } from "./harness/review.js";
 import { buildRuntimeTrends } from "./harness/runtime-trends.js";
 import { buildScorecard } from "./harness/scorecard.js";
 import { analyzeProfileFile } from "./finance/analysis-runner.js";
-import { runInteractiveAssist } from "./interactive-assist.js";
+import { resolveDefaultProfilePath, runInteractiveAssist } from "./interactive-assist.js";
 
 const supportedCommands = [
   "analyze",
@@ -146,18 +146,47 @@ export async function runCli(args: string[]): Promise<CliResult> {
   if (command === "assist") {
     const profilePath = args[1];
     const patchPath = args[2];
+    const interactiveSession = isInteractiveAssistSession(patchPath);
+    const resolvedProfilePath = profilePath ?? (interactiveSession ? await resolveDefaultProfilePath() : undefined);
 
-    if (!profilePath) {
+    if (!resolvedProfilePath) {
       return {
         exitCode: 1,
         stdout: "",
-        stderr: "Usage: assist <profile-path> [answer-patch-path]",
+        stderr: "Usage: assist [profile-path] [answer-patch-path]\nOmit profile-path only in an interactive TTY session.",
       };
     }
 
     try {
+      if (interactiveSession) {
+        const outcome = await runInteractiveAssist({
+          profilePath: resolvedProfilePath,
+          ask: askInteractiveQuestion,
+          isInteractive: true,
+        });
+
+        return outcome.status === "needs-input"
+          ? jsonResult(command, {
+              status: outcome.status,
+              profilePath: resolvedProfilePath,
+              profile: outcome.profile,
+              validationIssues: outcome.validationIssues,
+              followUpQuestions: outcome.followUpQuestions.map((issue) => ({
+                path: issue.path,
+                question: issue.question,
+              })),
+            })
+          : jsonResult(command, {
+              status: outcome.status,
+              profilePath: resolvedProfilePath,
+              profile: outcome.profile,
+              result: outcome.result,
+              report: outcome.report,
+            });
+      }
+
       const profilePayload = await readJsonFile<Record<string, unknown>>(
-        profilePath,
+        resolvedProfilePath,
         "Profile file must contain valid JSON.",
       );
       if (!profilePayload.ok) {
@@ -179,33 +208,6 @@ export async function runCli(args: string[]): Promise<CliResult> {
         };
       }
 
-      if (isInteractiveAssistSession(patchPath)) {
-        const outcome = await runInteractiveAssist({
-          profilePath,
-          ask: askInteractiveQuestion,
-          isInteractive: true,
-        });
-
-        return outcome.status === "needs-input"
-          ? jsonResult(command, {
-              status: outcome.status,
-              profilePath,
-              profile: outcome.profile,
-              validationIssues: outcome.validationIssues,
-              followUpQuestions: outcome.followUpQuestions.map((issue) => ({
-                path: issue.path,
-                question: issue.question,
-              })),
-            })
-          : jsonResult(command, {
-              status: outcome.status,
-              profilePath,
-              profile: outcome.profile,
-              result: outcome.result,
-              report: outcome.report,
-            });
-      }
-
       const outcome = runAgentWorkflow(
         profilePayload.payload,
         patchPayload && patchPayload.ok ? patchPayload.payload : undefined,
@@ -214,7 +216,7 @@ export async function runCli(args: string[]): Promise<CliResult> {
       return outcome.status === "needs-input"
         ? jsonResult(command, {
             status: outcome.status,
-            profilePath,
+            profilePath: resolvedProfilePath,
             patchPath,
             profile: outcome.profile,
             validationIssues: outcome.validationIssues,
@@ -225,7 +227,7 @@ export async function runCli(args: string[]): Promise<CliResult> {
           })
         : jsonResult(command, {
             status: outcome.status,
-            profilePath,
+            profilePath: resolvedProfilePath,
             patchPath,
             profile: outcome.profile,
             result: outcome.result,
