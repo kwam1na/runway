@@ -259,6 +259,85 @@ describe("agent workflow cli", () => {
     }
   });
 
+  it("creates a default profile path for statement-first interactive assist when none is provided", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "runway-agent-cli-cwd-"));
+    tempDirs.push(dir);
+    process.chdir(dir);
+
+    const stdinDescriptor = Object.getOwnPropertyDescriptor(process.stdin, "isTTY");
+    const stdoutDescriptor = Object.getOwnPropertyDescriptor(process.stdout, "isTTY");
+
+    Object.defineProperty(process.stdin, "isTTY", { value: true, configurable: true });
+    Object.defineProperty(process.stdout, "isTTY", { value: true, configurable: true });
+
+    vi.mocked(runInteractiveAssist).mockResolvedValue({
+      status: "ready",
+      profile: {},
+      analysis: {
+        ok: true,
+        profile: {} as never,
+        result: {
+          snapshot: {
+            liquid_cash: 1,
+            monthly_burn: 1,
+            runway_months: 1,
+          },
+          recommended_immediate_actions: [],
+          monthly_plan: [],
+          runway_estimate: {
+            months: 1,
+            floor_months: 6,
+            floor_status: "meets-floor",
+          },
+          assumptions: [],
+          risk_flags: [],
+        },
+        report: "# Runway Analysis",
+      },
+      result: {
+        snapshot: {
+          liquid_cash: 1,
+          monthly_burn: 1,
+          runway_months: 1,
+        },
+        recommended_immediate_actions: [],
+        monthly_plan: [],
+        runway_estimate: {
+          months: 1,
+          floor_months: 6,
+          floor_status: "meets-floor",
+        },
+        assumptions: [],
+        risk_flags: [],
+      },
+      report: "# Runway Analysis",
+    });
+
+    try {
+      const result = await runCli(["assist", "--statements", "card-a.pdf"]);
+      const payload = JSON.parse(result.stdout) as {
+        command: string;
+        status: string;
+        profilePath: string;
+      };
+
+      expect(result.exitCode).toBe(0);
+      expect(payload).toMatchObject({
+        command: "assist",
+        status: "ready",
+      });
+      expect(payload.profilePath).toMatch(/runway-profile\.json$/);
+      expect(runInteractiveAssist).toHaveBeenCalledWith({
+        profilePath: payload.profilePath,
+        ask: expect.any(Function),
+        isInteractive: true,
+        statementPaths: ["card-a.pdf"],
+      });
+    } finally {
+      restoreTtyState(stdinDescriptor, stdoutDescriptor);
+    }
+  });
+
   it("delegates to interactive assist in a tty session without a patch file", async () => {
     const profilePath = writeJsonFile("partial-profile.json", {
       cash_position: {

@@ -9,6 +9,11 @@ export type InteractiveAssistOptions = {
   ask(question: string): Promise<string>;
   isInteractive: boolean;
   statementPaths?: string[];
+  ingestStatements?(options: {
+    profile: LocalFinancialProfileInput;
+    statementPaths: string[];
+    ask: InteractiveAssistOptions["ask"];
+  }): Promise<LocalFinancialProfileInput>;
 };
 
 const DEFAULT_RUNWAY_FLOOR_MONTHS = 6;
@@ -201,15 +206,27 @@ async function completeMonthlyObligationsStage(
 async function completeDebtCollectionStage(
   profile: LocalFinancialProfileInput,
   ask: InteractiveAssistOptions["ask"],
+  options?: {
+    allowAdditionalDebts?: boolean;
+  },
 ): Promise<LocalFinancialProfileInput> {
-  if (profile.debts !== undefined) {
+  const debts = profile.debts ? profile.debts.map((debt) => ({ ...debt })) : [];
+  const debtCountQuestion =
+    profile.debts === undefined
+      ? "How many debts should runway track?"
+      : options?.allowAdditionalDebts
+        ? "How many additional debts should runway track beyond the uploaded statements? Enter 0 if none."
+        : undefined;
+
+  if (!debtCountQuestion) {
     return profile;
   }
 
-  const debtCount = await askNonNegativeInteger(ask, "How many debts should runway track?");
-  const debts: NonNullable<LocalFinancialProfileInput["debts"]> = [];
+  const debtCount = await askNonNegativeInteger(ask, debtCountQuestion);
+  const startingIndex = debts.length;
 
-  for (let index = 0; index < debtCount; index += 1) {
+  for (let offset = 0; offset < debtCount; offset += 1) {
+    const index = startingIndex + offset;
     const label = await askDebtLabel(ask, index);
     const balance = await askNonNegativeNumber(
       ask,
@@ -297,6 +314,9 @@ function withBootstrapPlanningPreferences(
 async function bootstrapProfileStages(
   profile: LocalFinancialProfileInput,
   ask: InteractiveAssistOptions["ask"],
+  options?: {
+    allowAdditionalDebts?: boolean;
+  },
 ): Promise<LocalFinancialProfileInput> {
   const needsBootstrap =
     profile.cash_position?.available_cash === undefined ||
@@ -309,7 +329,7 @@ async function bootstrapProfileStages(
   let nextProfile = cloneProfile(profile);
   nextProfile = await completeCashPositionStage(nextProfile, ask);
   nextProfile = await completeMonthlyObligationsStage(nextProfile, ask);
-  nextProfile = await completeDebtCollectionStage(nextProfile, ask);
+  nextProfile = await completeDebtCollectionStage(nextProfile, ask, options);
   nextProfile = await completeIncomeAssumptionsStage(nextProfile, ask);
 
   return needsBootstrap ? withBootstrapPlanningPreferences(nextProfile) : nextProfile;
@@ -446,7 +466,28 @@ export async function runInteractiveAssist(
   options: InteractiveAssistOptions,
 ): Promise<AgentWorkflowOutcome> {
   const initialProfileState = await readOrInitializeProfile(options.profilePath);
-  let profile = await bootstrapProfileStages(initialProfileState.profile, options.ask);
+  const statementFirstBootstrap =
+    !initialProfileState.exists && Boolean(options.statementPaths && options.statementPaths.length > 0);
+  let profile = statementFirstBootstrap
+    ? {
+        debts: [],
+      }
+    : await bootstrapProfileStages(initialProfileState.profile, options.ask);
+
+  if (options.statementPaths && options.statementPaths.length > 0) {
+    const ingestStatements = options.ingestStatements ?? ingestStatementsIntoProfile;
+    profile = await ingestStatements({
+      profile,
+      statementPaths: options.statementPaths,
+      ask: options.ask,
+    });
+  }
+
+  if (statementFirstBootstrap) {
+    profile = await bootstrapProfileStages(profile, options.ask, {
+      allowAdditionalDebts: true,
+    });
+  }
 
   if (
     !initialProfileState.exists ||
@@ -457,20 +498,6 @@ export async function runInteractiveAssist(
     }
 
     await writeProfile(options.profilePath, profile);
-  }
-
-  if (options.statementPaths && options.statementPaths.length > 0) {
-    const reviewedProfile = await ingestStatementsIntoProfile({
-      profile,
-      statementPaths: options.statementPaths,
-      ask: options.ask,
-    });
-
-    if (JSON.stringify(reviewedProfile) !== JSON.stringify(profile)) {
-      await ensureBackup(options.profilePath);
-      profile = reviewedProfile;
-      await writeProfile(options.profilePath, profile);
-    }
   }
 
   let outcome = runAgentWorkflow(profile);
