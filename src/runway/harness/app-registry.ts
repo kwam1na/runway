@@ -35,10 +35,15 @@ export const harnessTargets = [
         pathPrefixes: [
           "src/runway/harness/app-registry.ts",
           "src/runway/harness/audit.ts",
+          "src/runway/harness/behavior.ts",
           "src/runway/harness/check.ts",
           "src/runway/harness/command-runner.ts",
           "src/runway/harness/generate.ts",
+          "src/runway/harness/inferential-review.ts",
+          "src/runway/harness/janitor.ts",
           "src/runway/harness/review.ts",
+          "src/runway/harness/runtime-trends.ts",
+          "src/runway/harness/scorecard.ts",
           "src/runway/harness/types.ts",
         ],
         commands: [
