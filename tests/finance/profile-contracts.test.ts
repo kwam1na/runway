@@ -313,7 +313,7 @@ describe("financial profile contracts", () => {
       },
       debts: [],
       income_assumptions: {
-        expected_monthly_income: 5000,
+        expected_monthly_income: 0,
         income_is_confirmed: "false" as unknown as boolean,
       },
       planning_preferences: {
@@ -340,6 +340,38 @@ describe("financial profile contracts", () => {
       {
         path: "planning_preferences.strategy",
         message: "Planning strategy must be runway-first in v1.",
+      },
+    ]);
+  });
+
+  it("asks for confirmation before counting positive future income in the normalized profile", () => {
+    const result = normalizeFinancialProfile({
+      cash_position: {
+        available_cash: 18000,
+        reserved_cash: 2500,
+        severance_total: 12000,
+      },
+      monthly_obligations: {
+        essentials: 3200,
+      },
+      debts: [],
+      income_assumptions: {
+        expected_monthly_income: 3000,
+      },
+    });
+
+    expect(result.ok).toBe(false);
+
+    if (result.ok) {
+      throw new Error("expected ambiguous income validation failure");
+    }
+
+    expect(result.errors).toEqual([
+      {
+        path: "income_assumptions.income_is_confirmed",
+        message: "Expected monthly income must be confirmed before runway can count it.",
+        question:
+          "Is the expected monthly income confirmed enough to include in runway planning?",
       },
     ]);
   });

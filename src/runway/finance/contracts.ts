@@ -576,6 +576,12 @@ export function normalizeFinancialProfile(
       path: "income_assumptions.expected_monthly_income",
       message: "Expected monthly income cannot be negative.",
     });
+  } else if (expectedMonthlyIncomeInput > 0 && !incomeIsConfirmed) {
+    errors.push({
+      path: "income_assumptions.income_is_confirmed",
+      message: "Expected monthly income must be confirmed before runway can count it.",
+      question: "Is the expected monthly income confirmed enough to include in runway planning?",
+    });
   }
 
   const normalizedIncome =
