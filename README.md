@@ -2,6 +2,10 @@
 
 CLI-first TypeScript repository for an agentic personal-finance system.
 
+## Analysis Workflow
+
+The shared intake, validation, and recommendation contract for agent integrations lives in `docs/agent/analysis-workflow.md`. Use that doc together with `src/runway/cli.ts analyze <profile-path>` when wiring a new local wrapper to the shared finance runner.
+
 ## Harness Commands
 
 The supported bootstrap flow is:
