@@ -193,6 +193,47 @@ describe("runway planning engine", () => {
     ));
   });
 
+  it("breaks equal-burn safe payoff ties by lower projected interest carry", () => {
+    const result = buildRunwayPlan(
+      createProfile({
+        cash_position: {
+          available_cash: 15000,
+          reserved_cash: 3000,
+          severance_total: 7000,
+          total_liquid_cash: 25000,
+        },
+        monthly_obligations: {
+          essentials: 1800,
+          discretionary: 200,
+          debt_minimums: 200,
+          total_monthly_burn: 2200,
+        },
+        debts: [
+          {
+            id: "small-high-apr",
+            label: "Small High APR",
+            balance: 1000,
+            apr: 0.3,
+            minimum_payment: 100,
+          },
+          {
+            id: "large-lower-apr",
+            label: "Large Lower APR",
+            balance: 1600,
+            apr: 0.19,
+            minimum_payment: 100,
+          },
+        ],
+      }),
+    );
+
+    expect(
+      result.recommended_immediate_actions.filter((action) => action.type === "pay-extra-debt")[0],
+    ).toMatchObject({
+      amount: 1600,
+    });
+  });
+
   it("surfaces structurally unsafe runway situations with explicit warnings", () => {
     const result = buildRunwayPlan(
       createProfile({

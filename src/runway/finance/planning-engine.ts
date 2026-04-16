@@ -51,35 +51,55 @@ function selectSafeFullPayoff(
   state: PlannerState,
   targetRunwayMonths: number,
 ): NormalizedDebtProfile | null {
-  const eligible = debts.filter((debt) => {
-    if (debt.balance > state.cash) {
-      return false;
-    }
+  const eligible = debts
+    .map((debt) => {
+      if (debt.balance > state.cash) {
+        return null;
+      }
 
-    const nextBurn = Math.max(0, state.monthlyBurn - debt.minimum_payment);
-    const nextRunwayMonths = calculateWholeRunwayMonths(state.cash - debt.balance, nextBurn);
-    return nextRunwayMonths >= targetRunwayMonths;
-  });
+      const nextBurn = Math.max(0, state.monthlyBurn - debt.minimum_payment);
+      const nextRunwayMonths = calculateWholeRunwayMonths(state.cash - debt.balance, nextBurn);
+      if (nextRunwayMonths < targetRunwayMonths) {
+        return null;
+      }
+
+      const projectedInterestCarry = debts
+        .filter((candidate) => candidate.id !== debt.id)
+        .reduce((sum, candidate) => sum + candidate.balance * candidate.apr, 0);
+
+      return {
+        debt,
+        nextBurn,
+        nextRunwayMonths,
+        projectedInterestCarry,
+      };
+    })
+    .filter((candidate): candidate is {
+      debt: NormalizedDebtProfile;
+      nextBurn: number;
+      nextRunwayMonths: number;
+      projectedInterestCarry: number;
+    } => candidate !== null);
 
   if (eligible.length === 0) {
     return null;
   }
 
   return eligible.sort((left, right) => {
-    if (left.minimum_payment !== right.minimum_payment) {
-      return right.minimum_payment - left.minimum_payment;
+    if (left.nextRunwayMonths !== right.nextRunwayMonths) {
+      return right.nextRunwayMonths - left.nextRunwayMonths;
     }
 
-    if (left.apr !== right.apr) {
-      return right.apr - left.apr;
+    if (left.nextBurn !== right.nextBurn) {
+      return left.nextBurn - right.nextBurn;
     }
 
-    if (left.balance !== right.balance) {
-      return left.balance - right.balance;
+    if (left.projectedInterestCarry !== right.projectedInterestCarry) {
+      return left.projectedInterestCarry - right.projectedInterestCarry;
     }
 
-    return left.id.localeCompare(right.id);
-  })[0]!;
+    return left.debt.id.localeCompare(right.debt.id);
+  })[0]!.debt;
 }
 
 function allocateExtraDebtPaydown(profile: NormalizedFinancialProfile): PlannerState {
