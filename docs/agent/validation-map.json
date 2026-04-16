@@ -29,6 +29,12 @@
           ]
         },
         {
+          "label": "interactive assist",
+          "paths": [
+            "src/runway/interactive-assist.ts"
+          ]
+        },
+        {
           "label": "finance domain logic",
           "paths": [
             "src/runway/finance"
@@ -79,6 +85,25 @@
           "name": "agent workflow logic",
           "pathPrefixes": [
             "src/runway/agents"
+          ],
+          "commands": [
+            {
+              "kind": "npm",
+              "script": "typecheck"
+            },
+            {
+              "kind": "npm",
+              "script": "test"
+            }
+          ],
+          "behaviorScenarios": [
+            "cli-runway-assist"
+          ]
+        },
+        {
+          "name": "interactive assist logic",
+          "pathPrefixes": [
+            "src/runway/interactive-assist.ts"
           ],
           "commands": [
             {
@@ -270,7 +295,7 @@
     },
     {
       "name": "cli-runway-assist",
-      "description": "Runs the minimal agent loop against a partial profile and local answer patch.",
+      "description": "Runs the deterministic non-interactive agent loop against a partial profile and local answer patch.",
       "command": [
         "tsx",
         "src/runway/cli.ts",
@@ -307,6 +332,25 @@
       "name": "agent workflow logic",
       "pathPrefixes": [
         "src/runway/agents"
+      ],
+      "commands": [
+        {
+          "kind": "npm",
+          "script": "typecheck"
+        },
+        {
+          "kind": "npm",
+          "script": "test"
+        }
+      ],
+      "behaviorScenarios": [
+        "cli-runway-assist"
+      ]
+    },
+    {
+      "name": "interactive assist logic",
+      "pathPrefixes": [
+        "src/runway/interactive-assist.ts"
       ],
       "commands": [
         {

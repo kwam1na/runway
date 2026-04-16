@@ -10,7 +10,7 @@
 
 ## Scope
 
-`runway` is a CLI-first TypeScript package with shared finance contracts, a minimal local agent loop, a local analysis runner, and a registry-backed harness for generation, check, review, and audit flows.
+`runway` is a CLI-first TypeScript package with shared finance contracts, a minimal local agent loop, an interactive TTY-assisted profile builder, a local analysis runner, and a registry-backed harness for generation, check, review, and audit flows.
 
 ## Boundaries
 
@@ -24,7 +24,7 @@
 
 ## Finance Workflow
 
-Use `src/runway/cli.ts assist <profile-path> [answer-patch-path]` for the minimal agent-style loop, or `src/runway/cli.ts analyze <profile-path>` when you already have a complete local profile. The agent workflow implementation lives in `src/runway/agents/`, while `src/runway/finance/` remains the source of truth for validation and planning logic. `docs/agent/analysis-workflow.md` is the source of truth for wrapper expectations, local-only storage, and the runway-first boundaries.
+Use `src/runway/cli.ts assist <profile-path> [answer-patch-path]` for the agent-style loop, or `src/runway/cli.ts analyze <profile-path>` when you already have a complete local profile. In a real TTY without a patch file, `assist` now asks validator-driven follow-up questions, writes accepted answers directly back into the profile file, and preserves a one-time `<profile-path>.bak` backup before the first interactive mutation. The agent workflow implementation lives in `src/runway/agents/`, while `src/runway/finance/` remains the source of truth for validation and planning logic. `docs/agent/analysis-workflow.md` is the source of truth for wrapper expectations, local-only storage, and the runway-first boundaries.
 
 ## Common Validations
 

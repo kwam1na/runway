@@ -9,7 +9,7 @@ export const behaviorScenarios = [
   },
   {
     name: "cli-runway-assist",
-    description: "Runs the minimal agent loop against a partial profile and local answer patch.",
+    description: "Runs the deterministic non-interactive agent loop against a partial profile and local answer patch.",
     command: [
       "tsx",
       "src/runway/cli.ts",
