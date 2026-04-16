@@ -234,6 +234,83 @@ describe("financial profile contracts", () => {
     ]);
   });
 
+  it("returns validation errors instead of throwing when profile collections are malformed", () => {
+    const result = normalizeFinancialProfile({
+      cash_position: {
+        available_cash: 18000,
+        reserved_cash: 2500,
+        severance_total: 12000,
+      },
+      monthly_obligations: {
+        essentials: 3200,
+      },
+      debts: { id: "card-a" } as unknown as never[],
+      income_assumptions: {
+        notes: "keep runway high" as unknown as never[],
+      },
+    });
+
+    expect(result.ok).toBe(false);
+
+    if (result.ok) {
+      throw new Error("expected malformed collection validation failure");
+    }
+
+    expect(result.errors).toEqual([
+      {
+        path: "debts",
+        message: "Debts must be provided as an array.",
+      },
+      {
+        path: "income_assumptions.notes",
+        message: "Income assumption notes must be provided as an array of strings.",
+      },
+    ]);
+  });
+
+  it("validates boolean and policy fields at runtime instead of trusting static typing", () => {
+    const result = normalizeFinancialProfile({
+      cash_position: {
+        available_cash: 18000,
+        reserved_cash: 2500,
+        severance_total: 12000,
+      },
+      monthly_obligations: {
+        essentials: 3200,
+      },
+      debts: [],
+      income_assumptions: {
+        expected_monthly_income: 5000,
+        income_is_confirmed: "false" as unknown as boolean,
+      },
+      planning_preferences: {
+        strategy: "interest-first" as unknown as "runway-first",
+        prioritize_interest_savings: "yes" as unknown as boolean,
+      },
+    });
+
+    expect(result.ok).toBe(false);
+
+    if (result.ok) {
+      throw new Error("expected boolean validation failure");
+    }
+
+    expect(result.errors).toEqual([
+      {
+        path: "income_assumptions.income_is_confirmed",
+        message: "Income confirmation must be a boolean.",
+      },
+      {
+        path: "planning_preferences.prioritize_interest_savings",
+        message: "Interest-savings preference must be a boolean.",
+      },
+      {
+        path: "planning_preferences.strategy",
+        message: "Planning strategy must be runway-first in v1.",
+      },
+    ]);
+  });
+
   it("defines a planner result shape with explicit defaults for downstream tickets", () => {
     const result = createEmptyPlannerResult();
 
@@ -403,6 +480,55 @@ describe("financial profile contracts", () => {
       {
         path: "monthly_plan[0].debt_payments[0].debt_id",
         message: "Monthly debt payments must reference a debt identifier.",
+      },
+    ]);
+  });
+
+  it("returns planner-result validation errors instead of throwing on malformed collections", () => {
+    const result = normalizePlannerResult({
+      snapshot: {
+        liquid_cash: 32500,
+        monthly_burn: 3870,
+        runway_months: 8.4,
+      },
+      recommended_immediate_actions: { type: "pay-minimums" } as unknown as never[],
+      monthly_plan: [
+        {
+          month: 1,
+          starting_cash: 32500,
+          ending_cash: 28630,
+          debt_payments: { debt_id: "card-a", amount: 220 } as unknown as never[],
+        },
+      ],
+      runway_estimate: {
+        months: 8.4,
+      },
+      assumptions: "no future income" as unknown as never[],
+      risk_flags: { severity: "warning", summary: "watch burn" } as unknown as never[],
+    });
+
+    expect(result.ok).toBe(false);
+
+    if (result.ok) {
+      throw new Error("expected malformed planner collection validation failure");
+    }
+
+    expect(result.errors).toEqual([
+      {
+        path: "recommended_immediate_actions",
+        message: "Recommended actions must be provided as an array.",
+      },
+      {
+        path: "assumptions",
+        message: "Assumptions must be provided as an array of strings.",
+      },
+      {
+        path: "risk_flags",
+        message: "Risk flags must be provided as an array.",
+      },
+      {
+        path: "monthly_plan[0].debt_payments",
+        message: "Monthly debt payments must be provided as an array.",
       },
     ]);
   });

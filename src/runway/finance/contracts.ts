@@ -258,11 +258,76 @@ function readRequiredText(
   return trimmed;
 }
 
+function readArray<T>(
+  value: T[] | undefined,
+  path: string,
+  message: string,
+  errors: ValidationIssue[],
+): T[] {
+  if (value === undefined) {
+    return [];
+  }
+
+  if (!Array.isArray(value)) {
+    errors.push({ path, message });
+    return [];
+  }
+
+  return value;
+}
+
+function readOptionalBoolean(
+  value: boolean | undefined,
+  path: string,
+  message: string,
+  errors: ValidationIssue[],
+): boolean | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (typeof value !== "boolean") {
+    errors.push({ path, message });
+    return undefined;
+  }
+
+  return value;
+}
+
+function normalizeStringArray(
+  value: string[] | undefined,
+  path: string,
+  arrayMessage: string,
+  itemMessage: string,
+  errors: ValidationIssue[],
+): string[] {
+  return readArray(value, path, arrayMessage, errors).flatMap((item, index) => {
+    if (typeof item !== "string") {
+      errors.push({
+        path: `${path}[${index}]`,
+        message: itemMessage,
+      });
+      return [];
+    }
+
+    const normalized = readRequiredText(item, `${path}[${index}]`, itemMessage, errors);
+    return normalized ? [normalized] : [];
+  });
+}
+
 function normalizeDebt(
   debt: DebtProfileInput,
   index: number,
   errors: ValidationIssue[],
 ): NormalizedDebtProfile | null {
+  if (typeof debt !== "object" || debt === null || Array.isArray(debt)) {
+    errors.push({
+      path: `debts[${index}]`,
+      message: "Each debt must be provided as an object.",
+    });
+    return null;
+  }
+
   const label = debt.label?.trim() || `Debt ${index + 1}`;
   const id = debt.id?.trim() || `debt-${index + 1}`;
   const balance = readNonNegativeNumber(
@@ -339,6 +404,38 @@ export function normalizeFinancialProfile(
   const errors: ValidationIssue[] = [];
   const cashPosition = input.cash_position ?? {};
   const monthlyObligations = input.monthly_obligations ?? {};
+  const debts = readArray(input.debts, "debts", "Debts must be provided as an array.", errors);
+  const normalizedNotes = normalizeStringArray(
+    input.income_assumptions?.notes,
+    "income_assumptions.notes",
+    "Income assumption notes must be provided as an array of strings.",
+    "Income assumption notes must be non-empty strings.",
+    errors,
+  );
+  const incomeIsConfirmed =
+    readOptionalBoolean(
+      input.income_assumptions?.income_is_confirmed,
+      "income_assumptions.income_is_confirmed",
+      "Income confirmation must be a boolean.",
+      errors,
+    ) ?? false;
+  const prioritizeInterestSavings =
+    readOptionalBoolean(
+      input.planning_preferences?.prioritize_interest_savings,
+      "planning_preferences.prioritize_interest_savings",
+      "Interest-savings preference must be a boolean.",
+      errors,
+    ) ?? false;
+
+  if (
+    input.planning_preferences?.strategy !== undefined &&
+    input.planning_preferences.strategy !== "runway-first"
+  ) {
+    errors.push({
+      path: "planning_preferences.strategy",
+      message: "Planning strategy must be runway-first in v1.",
+    });
+  }
 
   const availableCash = readNonNegativeNumber(
     cashPosition.available_cash,
@@ -386,7 +483,7 @@ export function normalizeFinancialProfile(
     });
   }
 
-  const normalizedDebtEntries = (input.debts ?? []).map((debt, index) => ({
+  const normalizedDebtEntries = debts.map((debt, index) => ({
     index,
     normalized: normalizeDebt(debt, index, errors),
   }));
@@ -423,7 +520,6 @@ export function normalizeFinancialProfile(
     });
   }
 
-  const incomeIsConfirmed = input.income_assumptions?.income_is_confirmed ?? false;
   const normalizedIncome =
     incomeIsConfirmed && expectedMonthlyIncomeInput > 0 ? expectedMonthlyIncomeInput : 0;
 
@@ -475,12 +571,12 @@ export function normalizeFinancialProfile(
       income_assumptions: {
         expected_monthly_income: normalizedIncome,
         income_is_confirmed: incomeIsConfirmed,
-        notes: [...(input.income_assumptions?.notes ?? [])],
+        notes: normalizedNotes,
       },
       planning_preferences: {
         strategy: "runway-first",
         runway_floor_months: normalizedRunwayFloorMonths,
-        prioritize_interest_savings: input.planning_preferences?.prioritize_interest_savings ?? false,
+        prioritize_interest_savings: prioritizeInterestSavings,
       },
     },
   };
@@ -511,6 +607,31 @@ export function normalizePlannerResult(
   const errors: ValidationIssue[] = [];
   const snapshot = input.snapshot ?? {};
   const runwayEstimate = input.runway_estimate ?? {};
+  const recommendedImmediateActionInputs = readArray(
+    input.recommended_immediate_actions,
+    "recommended_immediate_actions",
+    "Recommended actions must be provided as an array.",
+    errors,
+  );
+  const monthlyPlanInputs = readArray(
+    input.monthly_plan,
+    "monthly_plan",
+    "Monthly plan entries must be provided as an array.",
+    errors,
+  );
+  const assumptionsInput = normalizeStringArray(
+    input.assumptions,
+    "assumptions",
+    "Assumptions must be provided as an array of strings.",
+    "Assumptions must be non-empty strings.",
+    errors,
+  );
+  const riskFlagInputs = readArray(
+    input.risk_flags,
+    "risk_flags",
+    "Risk flags must be provided as an array.",
+    errors,
+  );
 
   const liquidCash = readNonNegativeNumber(
     snapshot.liquid_cash,
@@ -561,8 +682,16 @@ export function normalizePlannerResult(
     });
   }
 
-  const recommendedImmediateActions = (input.recommended_immediate_actions ?? []).flatMap(
+  const recommendedImmediateActions = recommendedImmediateActionInputs.flatMap(
     (action, index) => {
+      if (typeof action !== "object" || action === null || Array.isArray(action)) {
+        errors.push({
+          path: `recommended_immediate_actions[${index}]`,
+          message: "Recommended actions must be objects.",
+        });
+        return [];
+      }
+
       const summary = readRequiredText(
         action.summary,
         `recommended_immediate_actions[${index}].summary`,
@@ -606,7 +735,15 @@ export function normalizePlannerResult(
     },
   );
 
-  const monthlyPlan = (input.monthly_plan ?? []).flatMap((entry, index) => {
+  const monthlyPlan = monthlyPlanInputs.flatMap((entry, index) => {
+    if (typeof entry !== "object" || entry === null || Array.isArray(entry)) {
+      errors.push({
+        path: `monthly_plan[${index}]`,
+        message: "Monthly plan entries must be objects.",
+      });
+      return [];
+    }
+
     const month = readPositiveNumber(
       entry.month,
       `monthly_plan[${index}].month`,
@@ -632,7 +769,20 @@ export function normalizePlannerResult(
       errors,
     );
 
-    const debtPayments = (entry.debt_payments ?? []).flatMap((payment, paymentIndex) => {
+    const debtPayments = readArray(
+      entry.debt_payments,
+      `monthly_plan[${index}].debt_payments`,
+      "Monthly debt payments must be provided as an array.",
+      errors,
+    ).flatMap((payment, paymentIndex) => {
+      if (typeof payment !== "object" || payment === null || Array.isArray(payment)) {
+        errors.push({
+          path: `monthly_plan[${index}].debt_payments[${paymentIndex}]`,
+          message: "Monthly debt payments must be objects.",
+        });
+        return [];
+      }
+
       const debtId = readRequiredText(
         payment.debt_id,
         `monthly_plan[${index}].debt_payments[${paymentIndex}].debt_id`,
@@ -674,17 +824,15 @@ export function normalizePlannerResult(
     ];
   });
 
-  const assumptions = (input.assumptions ?? []).flatMap((assumption, index) => {
-    const normalized = readRequiredText(
-      assumption,
-      `assumptions[${index}]`,
-      "Assumptions must be non-empty strings.",
-      errors,
-    );
-    return normalized ? [normalized] : [];
-  });
+  const riskFlags = riskFlagInputs.flatMap((riskFlag, index) => {
+    if (typeof riskFlag !== "object" || riskFlag === null || Array.isArray(riskFlag)) {
+      errors.push({
+        path: `risk_flags[${index}]`,
+        message: "Risk flags must be objects.",
+      });
+      return [];
+    }
 
-  const riskFlags = (input.risk_flags ?? []).flatMap((riskFlag, index) => {
     const summary = readRequiredText(
       riskFlag.summary,
       `risk_flags[${index}].summary`,
@@ -741,7 +889,7 @@ export function normalizePlannerResult(
         floor_months: floorMonths,
         floor_status: floorStatus,
       },
-      assumptions,
+      assumptions: assumptionsInput,
       risk_flags: riskFlags,
     },
   };
