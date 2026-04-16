@@ -21,8 +21,22 @@ describe("project skeleton", () => {
       build: "tsc -p tsconfig.json",
       typecheck: "tsc -p tsconfig.json --noEmit",
       test: "vitest run",
+      prepare: "husky",
+      "validate:commit": "npm run typecheck && npm test && npm run harness:check",
+      "validate:push": "npm run validate:pr",
       "harness:generate": "tsx src/runway/cli.ts generate",
       "harness:check": "tsx src/runway/cli.ts check",
     });
+  });
+
+  it("defines versioned git hooks for commit and push validation", () => {
+    const root = resolve(process.cwd());
+    const preCommitPath = resolve(root, ".husky/pre-commit");
+    const prePushPath = resolve(root, ".husky/pre-push");
+
+    expect(existsSync(preCommitPath)).toBe(true);
+    expect(existsSync(prePushPath)).toBe(true);
+    expect(readFileSync(preCommitPath, "utf8")).toContain("npm run validate:commit");
+    expect(readFileSync(prePushPath, "utf8")).toContain("npm run validate:push");
   });
 });

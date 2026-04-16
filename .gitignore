@@ -4,3 +4,4 @@ artifacts/*.json
 artifacts/*.log
 .DS_Store
 .worktrees/
+.husky/_/
