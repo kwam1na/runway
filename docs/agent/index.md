@@ -10,12 +10,13 @@
 
 ## Scope
 
-`runway` is a CLI-first TypeScript package with shared finance contracts, a minimal local agent loop, an interactive TTY-assisted profile builder, a local analysis runner, and a registry-backed harness for generation, check, review, and audit flows.
+`runway` is a CLI-first TypeScript package with shared finance contracts, a minimal local agent loop, an interactive TTY-assisted profile builder, a local analysis runner, a local browser wrapper, and a registry-backed harness for generation, check, review, and audit flows.
 
 ## Boundaries
 
 - Current source in this checkout lives in `src/runway/index.ts`
 - Current CLI surface lives in `src/runway/cli.ts`
+- Local browser wrapper lives under `src/runway/web/`
 - Current manual onboarding docs live in `docs/agent/`
 - The finance intake and recommendation workflow is documented in `docs/agent/analysis-workflow.md`
 - Generated docs live in `graphify-out/`
@@ -24,7 +25,7 @@
 
 ## Finance Workflow
 
-Use `src/runway/cli.ts assist [profile-path] [answer-patch-path] [--statements <file> ...]` for the agent-style loop, or `src/runway/cli.ts analyze <profile-path>` when you already have a complete local profile. In a real TTY without a patch file, `assist` now asks validator-driven follow-up questions, writes accepted answers directly back into the profile file, and preserves a one-time `<profile-path>.bak` backup before the first interactive mutation. If no profile path is supplied in that TTY mode, the CLI creates a new local profile file at `./runway-profile.json` or the next available `./runway-profile-<n>.json` and builds the initial intake interactively before continuing through validator-driven follow-ups. When `--statements` is present, the CLI supports a statement-first interactive path: a missing profile starts from a minimal local shell, local PDF or image extraction runs before manual debt intake, reviewed debt candidates are merged into `debts[]`, and the user can add additional manual debts only if the uploaded statements do not cover the full debt set. The agent workflow implementation lives in `src/runway/agents/`, `src/runway/statement-intake/` owns file classification plus local extraction and review, and `src/runway/finance/` remains the source of truth for validation and planning logic. `docs/agent/analysis-workflow.md` is the source of truth for wrapper expectations, local-only storage, and the runway-first boundaries.
+Use `src/runway/cli.ts assist [profile-path] [answer-patch-path] [--statements <file> ...]` for the agent-style loop, `src/runway/cli.ts analyze <profile-path>` when you already have a complete local profile, or `src/runway/cli.ts web [profile-path]` when you want the same local-only workflow in the browser. In a real TTY without a patch file, `assist` now asks validator-driven follow-up questions, writes accepted answers directly back into the profile file, and preserves a one-time `<profile-path>.bak` backup before the first interactive mutation. If no profile path is supplied in that TTY mode, the CLI creates a new local profile file at `./runway-profile.json` or the next available `./runway-profile-<n>.json` and builds the initial intake interactively before continuing through validator-driven follow-ups. When `--statements` is present, the CLI supports a statement-first interactive path: a missing profile starts from a minimal local shell, local PDF or image extraction runs before manual debt intake, reviewed debt candidates are merged into `debts[]`, and the user can add additional manual debts only if the uploaded statements do not cover the full debt set. The browser wrapper uses the same shared workflow but presents the steps through `src/runway/web/` over a tiny local HTTP server while keeping the profile JSON file on disk. The agent workflow implementation lives in `src/runway/agents/`, `src/runway/statement-intake/` owns file classification plus local extraction and review, and `src/runway/finance/` remains the source of truth for validation and planning logic. `docs/agent/analysis-workflow.md` is the source of truth for wrapper expectations, local-only storage, and the runway-first boundaries.
 
 ## Common Validations
 

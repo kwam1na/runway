@@ -35,6 +35,12 @@
           ]
         },
         {
+          "label": "browser workflow",
+          "paths": [
+            "src/runway/web"
+          ]
+        },
+        {
           "label": "statement ingestion",
           "paths": [
             "src/runway/statement-intake"
@@ -124,6 +130,23 @@
           "behaviorScenarios": [
             "cli-runway-assist"
           ]
+        },
+        {
+          "name": "browser workflow logic",
+          "pathPrefixes": [
+            "src/runway/web"
+          ],
+          "commands": [
+            {
+              "kind": "npm",
+              "script": "typecheck"
+            },
+            {
+              "kind": "npm",
+              "script": "test"
+            }
+          ],
+          "behaviorScenarios": []
         },
         {
           "name": "statement ingestion logic",
@@ -388,6 +411,23 @@
       "behaviorScenarios": [
         "cli-runway-assist"
       ]
+    },
+    {
+      "name": "browser workflow logic",
+      "pathPrefixes": [
+        "src/runway/web"
+      ],
+      "commands": [
+        {
+          "kind": "npm",
+          "script": "typecheck"
+        },
+        {
+          "kind": "npm",
+          "script": "test"
+        }
+      ],
+      "behaviorScenarios": []
     },
     {
       "name": "statement ingestion logic",

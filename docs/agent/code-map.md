@@ -9,6 +9,7 @@
 
 - Current source lives in `src/runway/index.ts`
 - Current CLI surface lives in `src/runway/cli.ts`
+- `src/runway/web/`: local browser wrapper, HTTP server, static assets, and browser-session orchestration
 - `src/runway/harness/`: registry-backed generation, check, review, and audit logic
 - `src/runway/scenarios/`: executable runtime scenario inventory
 - `docs/agent/`: local onboarding docs in this bootstrap checkout

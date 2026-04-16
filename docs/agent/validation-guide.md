@@ -34,6 +34,16 @@ This file is generated from the harness registry.
 - Behavior scenarios:
 - `cli-runway-assist`
 
+## browser workflow logic
+
+- Path prefixes:
+- `src/runway/web`
+- Commands:
+- `npm run typecheck`
+- `npm run test`
+- Behavior scenarios:
+- none
+
 ## statement ingestion logic
 
 - Path prefixes:
