@@ -166,6 +166,10 @@ export async function runInteractiveAssist(
         continue;
       }
 
+      if (updatedProfile.kind === "unsupported") {
+        throw new Error(`Interactive assist cannot handle path: ${nextQuestion.path}`);
+      }
+
       await ensureBackup(options.profilePath);
       profile = updatedProfile.profile;
       await writeProfile(options.profilePath, profile);

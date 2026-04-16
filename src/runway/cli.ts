@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { createInterface } from "node:readline/promises";
 
 export type CliResult = {
   exitCode: number;
@@ -17,6 +18,7 @@ import { selectValidationsForFiles } from "./harness/review.js";
 import { buildRuntimeTrends } from "./harness/runtime-trends.js";
 import { buildScorecard } from "./harness/scorecard.js";
 import { analyzeProfileFile } from "./finance/analysis-runner.js";
+import { runInteractiveAssist } from "./interactive-assist.js";
 
 const supportedCommands = [
   "analyze",
@@ -57,6 +59,23 @@ async function readJsonFile<T>(path: string, invalidMessage: string): Promise<{ 
       ok: false,
       error: invalidMessage,
     };
+  }
+}
+
+function isInteractiveAssistSession(patchPath: string | undefined): boolean {
+  return !patchPath && Boolean(process.stdin.isTTY) && Boolean(process.stdout.isTTY);
+}
+
+async function askInteractiveQuestion(question: string): Promise<string> {
+  const prompt = createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  try {
+    return await prompt.question(`${question}\n> `);
+  } finally {
+    prompt.close();
   }
 }
 
@@ -158,6 +177,33 @@ export async function runCli(args: string[]): Promise<CliResult> {
           stdout: "",
           stderr: patchPayload.error,
         };
+      }
+
+      if (isInteractiveAssistSession(patchPath)) {
+        const outcome = await runInteractiveAssist({
+          profilePath,
+          ask: askInteractiveQuestion,
+          isInteractive: true,
+        });
+
+        return outcome.status === "needs-input"
+          ? jsonResult(command, {
+              status: outcome.status,
+              profilePath,
+              profile: outcome.profile,
+              validationIssues: outcome.validationIssues,
+              followUpQuestions: outcome.followUpQuestions.map((issue) => ({
+                path: issue.path,
+                question: issue.question,
+              })),
+            })
+          : jsonResult(command, {
+              status: outcome.status,
+              profilePath,
+              profile: outcome.profile,
+              result: outcome.result,
+              report: outcome.report,
+            });
       }
 
       const outcome = runAgentWorkflow(
