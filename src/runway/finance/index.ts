@@ -3,7 +3,9 @@ export {
   normalizeFinancialProfile,
   normalizePlannerResult,
 } from "./contracts.js";
+export { analyzeProfileFile, analyzeProfilePayload } from "./analysis-runner.js";
 export { buildRunwayPlan } from "./planning-engine.js";
+export type { AnalysisFailure, AnalysisOutcome, AnalysisSuccess } from "./analysis-runner.js";
 export type {
   DebtProfileInput,
   FinancialProfileNormalizationResult,
