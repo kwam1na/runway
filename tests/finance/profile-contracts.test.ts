@@ -190,7 +190,7 @@ describe("financial profile contracts", () => {
   it("rejects non-finite numeric values before they can poison planner math", () => {
     const result = normalizeFinancialProfile({
       cash_position: {
-        available_cash: Number.POSITIVE_INFINITY,
+        available_cash: Number.NaN,
         reserved_cash: 0,
         severance_total: 0,
       },
@@ -497,6 +497,38 @@ describe("financial profile contracts", () => {
       {
         path: "monthly_plan[0].debt_payments[0].debt_id",
         message: "Monthly debt payments must reference a debt identifier.",
+      },
+    ]);
+  });
+
+  it("rejects planner results whose floor status contradicts the numeric runway estimate", () => {
+    const result = normalizePlannerResult({
+      snapshot: {
+        liquid_cash: 32500,
+        monthly_burn: 3870,
+        runway_months: 2,
+      },
+      recommended_immediate_actions: [],
+      monthly_plan: [],
+      runway_estimate: {
+        months: 2,
+        floor_months: 6,
+        floor_status: "meets-floor",
+      },
+      assumptions: [],
+      risk_flags: [],
+    });
+
+    expect(result.ok).toBe(false);
+
+    if (result.ok) {
+      throw new Error("expected contradictory floor status validation failure");
+    }
+
+    expect(result.errors).toEqual([
+      {
+        path: "runway_estimate.floor_status",
+        message: "Runway floor status must match whether estimated months clear the configured floor.",
       },
     ]);
   });

@@ -180,7 +180,7 @@ const runwayFloorStatuses = new Set<PlannerResult["runway_estimate"]["floor_stat
 ]);
 
 function isMissingNumber(value: number | undefined): value is undefined {
-  return value === undefined || Number.isNaN(value);
+  return value === undefined;
 }
 
 function isFiniteNumber(value: number | undefined): value is number {
@@ -899,6 +899,22 @@ export function normalizePlannerResult(
     return {
       ok: false,
       errors,
+    };
+  }
+
+  if (
+    (floorStatus === "meets-floor" && estimatedMonths < floorMonths) ||
+    (floorStatus === "below-floor" && estimatedMonths >= floorMonths)
+  ) {
+    return {
+      ok: false,
+      errors: [
+        ...errors,
+        {
+          path: "runway_estimate.floor_status",
+          message: "Runway floor status must match whether estimated months clear the configured floor.",
+        },
+      ],
     };
   }
 
